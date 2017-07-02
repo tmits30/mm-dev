@@ -51,11 +51,14 @@ module test_ops();
     end
   endtask
 
+  localparam SP_INIT = 16'h01fe;
+
 `include "test_ops_sbi.vh"
 `include "test_ops_iem.vh"
 `include "test_ops_str.vh"
 `include "test_ops_rmw.vh"
 `include "test_ops_phr.vh"
+`include "test_ops_plr.vh"
 
   initial begin
     test_sbi; // Test for Single Byte Instructions
@@ -63,6 +66,7 @@ module test_ops();
     test_str; // Test for Store Operations
     test_rmw; // Test for Store Operations
     test_phr; // Test for Push Operations
+    test_plr; // Test for Pull Operations
     $finish;
   end
 

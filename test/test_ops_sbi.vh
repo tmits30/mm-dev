@@ -12,7 +12,7 @@ task test_sbi_NOP;
 endtask
 
 task test_sbi_SEC;
-  localparam T = 8'h01;
+  localparam T = 8'h21;
   begin
     meminit;
     mem.ram[0] <= 8'h38;
@@ -25,7 +25,7 @@ task test_sbi_SEC;
 endtask
 
 task test_sbi_SED;
-  localparam T = 8'h08;
+  localparam T = 8'h28;
   begin
     meminit;
     mem.ram[0] <= 8'hf8;
@@ -38,7 +38,7 @@ task test_sbi_SED;
 endtask
 
 task test_sbi_SEI;
-  localparam T = 8'h04;
+  localparam T = 8'h24;
   begin
     meminit;
     mem.ram[0] <= 8'h78;
@@ -51,7 +51,7 @@ task test_sbi_SEI;
 endtask
 
 task test_sbi_CLC;
-  localparam T = 8'h00;
+  localparam T = 8'h20;
   begin
     meminit;
     mem.ram[0] <= 8'h18;
@@ -65,7 +65,7 @@ task test_sbi_CLC;
 endtask
 
 task test_sbi_CLD;
-  localparam T = 8'h00;
+  localparam T = 8'h20;
   begin
     meminit;
     mem.ram[0] <= 8'hd8;
@@ -79,7 +79,7 @@ task test_sbi_CLD;
 endtask
 
 task test_sbi_CLI;
-  localparam T = 8'h00;
+  localparam T = 8'h20;
   begin
     meminit;
     mem.ram[0] <= 8'h58;
@@ -93,7 +93,7 @@ task test_sbi_CLI;
 endtask
 
 task test_sbi_CLV;
-  localparam T = 8'h00;
+  localparam T = 8'h20;
   begin
     meminit;
     mem.ram[0] <= 8'hb8;
@@ -135,7 +135,7 @@ task test_sbi_TAY;
 endtask
 
 task test_sbi_TSX;
-  localparam T = 8'hff;
+  localparam T = SP_INIT[7:0];
   begin
     meminit;
     mem.ram[0] <= 8'hba;
@@ -168,6 +168,8 @@ task test_sbi_TXS;
     meminit;
     mem.ram[0] <= 8'h9a;
     mem.ram[1] <= 8'hea; // NOP
+    mem.ram[2] <= 8'hea; // NOP
+    mem.ram[3] <= 8'hea; // NOP
     mpu.datapath.p_reg.Q <= 8'h40;
     reset_and_run;
     $display("TXS %s: P=0x%02x (0x%02x)",
