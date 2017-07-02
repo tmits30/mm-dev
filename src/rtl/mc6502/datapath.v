@@ -98,7 +98,7 @@ module datapath(
   flopenr #(8'h00) abh_reg(.CLK(CLK), .RES_N(RES_N), .WE(ABH_WE), .D(abh_wd), .Q(ABH));
 
   // Data Bus
-  mux8 db_mux(.D0(pcl), .D1(pch), .D2(dl), .D3(a), .D4(x), .D5(y), .D6(t), .D7(p), .S(DB_OUT_SRC), .Y(DB_OUT));
+  mux8 db_mux(.D0(a), .D1(x), .D2(y), .D3(t), .D4(p), .D5(pcl), .D6(pch), .S(DB_OUT_SRC), .Y(DB_OUT));
 
   assign FLAG = (pcadder.carry << 8) | p;
 
