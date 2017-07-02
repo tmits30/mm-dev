@@ -26,7 +26,7 @@ module mpu(
   wire       pch_we;
 
   // Registers Control
-  wire [1:0] reg_src; // dl / aluout
+  wire [2:0] reg_src; // dl / aluout
   wire       a_we;
   wire       x_we;
   wire       y_we;

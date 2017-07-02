@@ -20,7 +20,7 @@ module datapath(
   input        PCH_WE,
 
   // Registers Control
-  input [1:0]  REG_SRC, // DL / ALUout
+  input [2:0]  REG_SRC, // DL / ALUout
   input        A_WE,
   input        X_WE,
   input        Y_WE,
@@ -71,18 +71,18 @@ module datapath(
   flopenr #(8'h00) pch_reg(.CLK(CLK), .RES_N(RES_N), .WE(PCH_WE), .D(pch_wd), .Q(pch));
 
   // Registers
-  mux4 reg_mux(.D0(DB_IN), .D1(dl), .D2(alu_out), .S(REG_SRC), .Y(reg_wd));
+  mux8 reg_mux(.D0(a), .D1(x), .D2(y), .D3(s), .D4(t), .D5(p), .D6(DB_IN), .D7(alu_out), .S(REG_SRC), .Y(reg_wd));
 
   flopenr #(8'h11) a_reg(.CLK(CLK), .RES_N(RES_N), .WE(A_WE), .D(reg_wd), .Q(a));
   flopenr #(8'h22) x_reg(.CLK(CLK), .RES_N(RES_N), .WE(X_WE), .D(reg_wd), .Q(x));
   flopenr #(8'h33) y_reg(.CLK(CLK), .RES_N(RES_N), .WE(Y_WE), .D(reg_wd), .Q(y));
-  flopenr #(8'hff) s_reg(.CLK(CLK), .RES_N(RES_N), .WE(S_WE), .D(reg_wd), .Q(s));
+  flopenr #(8'hfe) s_reg(.CLK(CLK), .RES_N(RES_N), .WE(S_WE), .D(reg_wd), .Q(s));
   flopenr #(8'h00) t_reg(.CLK(CLK), .RES_N(RES_N), .WE(T_WE), .D(reg_wd), .Q(t));
 
   // Processor Status Register
-  mux8 p_mux(.D0(dl), .D1(p_alu), .D2(p | P_MASK), .D3(p & ~P_MASK), .D4(p), .S(P_SRC), .Y(p_wd));
+  mux8 p_mux(.D0(t), .D1(dl), .D2(p_alu), .D3(p | P_MASK), .D4(p & ~P_MASK), .D5(p), .S(P_SRC), .Y(p_wd));
 
-  flopenr #(8'h00) p_reg(.CLK(CLK), .RES_N(RES_N), .WE(1'b1), .D(p_wd), .Q(p));
+  flopenr #(8'h20) p_reg(.CLK(CLK), .RES_N(RES_N), .WE(1'b1), .D(p_wd), .Q(p));
 
   // ALU
   mux8 alu_src_a_mux(.D0(a), .D1(x), .D2(y), .D3(s), .D4(t), .D5(dl), .S(ALU_SRC_A), .Y(alu_src_a));

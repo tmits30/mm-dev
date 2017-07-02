@@ -26,7 +26,7 @@ module controller(
   output reg       PCH_WE,
 
   // Registers Control
-  output reg [1:0] REG_SRC, // DL / ALUout
+  output reg [2:0] REG_SRC, // DL / ALUout
   output reg       A_WE,
   output reg       X_WE,
   output reg       Y_WE,
@@ -62,8 +62,7 @@ module controller(
   //
   // Special Operation
   //
-  wire is_ldr_op, is_str_op, is_plr_op, is_tsd_op, is_rmw_op, is_set_op, is_clr_op, is_branch;
-  wire [7:0] flag_mask;
+  wire is_ldr_op, is_str_op, is_plr_op, is_txr_op, is_rmw_op, is_set_op, is_clr_op;
 
   // Load Operations
   assign is_ldr_op = (op == C_OP_LDA) | (op == C_OP_LDX) | (op == C_OP_LDY);
@@ -74,8 +73,8 @@ module controller(
   // Pull Operations
   assign is_plr_op = (op == C_OP_PLA) | (op == C_OP_PLP);
 
-  // Transfer Operations
-  assign is_tsd_op = (op == C_OP_TAX) | (op == C_OP_TAY) | (op == C_OP_TSX) |
+  // Transfer register-register Operations
+  assign is_txr_op = (op == C_OP_TAX) | (op == C_OP_TAY) | (op == C_OP_TSX) |
                      (op == C_OP_TXA) | (op == C_OP_TXS) | (op == C_OP_TYA);
 
   // Read-Modify-Write Operations
@@ -88,13 +87,21 @@ module controller(
   // Clear Flag Operations
   assign is_clr_op = (op == C_OP_CLC) | (op == C_OP_CLD) | (op == C_OP_CLI) | (op == C_OP_CLV);
 
+  //
   // Target for Flag Operations
+  //
+  wire [7:0] flag_mask;
+
   assign flag_mask = ((op == C_OP_CLC) || (op == C_OP_SEC)) ? C_FLAG_MASK_C :
                      ((op == C_OP_CLD) || (op == C_OP_SED)) ? C_FLAG_MASK_D :
                      ((op == C_OP_CLI) || (op == C_OP_SEI)) ? C_FLAG_MASK_I :
                      ((op == C_OP_CLI)) ? C_FLAG_MASK_V : 8'h00;
 
+  //
   // Is branch?
+  //
+  wire is_branch;
+
   assign is_branch = ((op == C_OP_BCC) && !(FLAG & C_FLAG_MASK_C)) ||
                      ((op == C_OP_BCS) &&  (FLAG & C_FLAG_MASK_C)) ||
                      ((op == C_OP_BNE) && !(FLAG & C_FLAG_MASK_Z)) ||
@@ -105,51 +112,50 @@ module controller(
                      ((op == C_OP_BMI) &&  (FLAG & C_FLAG_MASK_N));
 
   //
+  // Move Src-Dst Register
+  //
+  wire [3:0] mov_src, mov_dst;
+
+  assign mov_src = ((op == C_OP_TAX) | (op == C_OP_TAY)) ? C_REG_SRC_A :
+                  ((op == C_OP_TXA) | (op == C_OP_TXS)) ? C_REG_SRC_X :
+                  ((op == C_OP_TYA)) ? C_REG_SRC_Y :
+                  ((op == C_OP_TSX)) ? C_REG_SRC_S : C_REG_SRC_T;
+
+  assign mov_dst = ((op == C_OP_TXA) | (op == C_OP_TYA) |
+                   (op == C_OP_LDA) | (op == C_OP_PLA)) ? C_REG_DST_A :
+                  ((op == C_OP_TAX) | (op == C_OP_TSX) |
+                   (op == C_OP_LDX)) ? C_REG_DST_X :
+                  ((op == C_OP_TAY) | (op == C_OP_LDY)) ? C_REG_DST_Y :
+                  ((op == C_OP_TXS)) ? C_REG_DST_S :
+                  ((op == C_OP_PLP)) ? C_REG_DST_P : C_REG_DST_T;
+
+  //
   // ALU Execution
   //
-  wire [7:0] exe_src_a_mem;
-  wire [3:0] exe_dst_a_mem;
+  wire [3:0] exe_ctrl;
+  wire [2:0] exe_src_a_mem, exe_src_a;
 
   assign exe_src_a_mem = (addr_mode == C_ADDR_MODE_ACC) ? C_ALU_SRC_A_A : C_ALU_SRC_A_MEM;
-  assign exe_dst_a_mem = (addr_mode == C_ADDR_MODE_ACC) ? C_ALU_DST_A : C_ALU_DST_MEM;
 
-  wire [3:0] exe_ctrl;
-  wire [2:0] exe_src_a;
-  wire [1:0] exe_src_b;
-  wire [2:0] exe_dst;
-
-  assign exe_src_b = C_ALU_SRC_B_T;
-  assign {exe_ctrl, exe_src_a, exe_dst} =
-      (op == C_OP_LDA) ? {C_ALU_CTRL_THA, C_ALU_SRC_A_T, C_ALU_DST_A} :
-      (op == C_OP_LDX) ? {C_ALU_CTRL_THA, C_ALU_SRC_A_T, C_ALU_DST_X} :
-      (op == C_OP_LDY) ? {C_ALU_CTRL_THA, C_ALU_SRC_A_T, C_ALU_DST_Y} :
-      (op == C_OP_PLA) ? {C_ALU_CTRL_THA, C_ALU_SRC_A_T, C_ALU_DST_A} :
-      (op == C_OP_PLP) ? {C_ALU_CTRL_THA, C_ALU_SRC_A_T, C_ALU_DST_P} :
-      (op == C_OP_TAX) ? {C_ALU_CTRL_THA, C_ALU_SRC_A_A, C_ALU_DST_X} :
-      (op == C_OP_TAY) ? {C_ALU_CTRL_THA, C_ALU_SRC_A_A, C_ALU_DST_Y} :
-      (op == C_OP_TSX) ? {C_ALU_CTRL_THA, C_ALU_SRC_A_S, C_ALU_DST_X} :
-      (op == C_OP_TXA) ? {C_ALU_CTRL_THA, C_ALU_SRC_A_X, C_ALU_DST_A} :
-      (op == C_OP_TXS) ? {C_ALU_CTRL_THA, C_ALU_SRC_A_X, C_ALU_DST_S} :
-      (op == C_OP_TYA) ? {C_ALU_CTRL_THA, C_ALU_SRC_A_Y, C_ALU_DST_A} :
-      (op == C_OP_ADC) ? {C_ALU_CTRL_ADC, C_ALU_SRC_A_A, C_ALU_DST_A} :
-      (op == C_OP_AND) ? {C_ALU_CTRL_AND, C_ALU_SRC_A_A, C_ALU_DST_A} :
-      (op == C_OP_ASL) ? {C_ALU_CTRL_ASL, exe_src_a_mem, exe_dst_a_mem} :
-      (op == C_OP_BIT) ? {C_ALU_CTRL_BIT, C_ALU_SRC_A_A, C_ALU_DST_A} :
-      (op == C_OP_CMP) ? {C_ALU_CTRL_CMP, C_ALU_SRC_A_A, C_ALU_DST_A} :
-      (op == C_OP_CPX) ? {C_ALU_CTRL_CMP, C_ALU_SRC_A_X, C_ALU_DST_X} :
-      (op == C_OP_CPY) ? {C_ALU_CTRL_CMP, C_ALU_SRC_A_Y, C_ALU_DST_Y} :
-      (op == C_OP_DEC) ? {C_ALU_CTRL_DEC, C_ALU_SRC_A_T, C_ALU_DST_T} :
-      (op == C_OP_DEX) ? {C_ALU_CTRL_DEC, C_ALU_SRC_A_X, C_ALU_DST_X} :
-      (op == C_OP_DEY) ? {C_ALU_CTRL_DEC, C_ALU_SRC_A_Y, C_ALU_DST_Y} :
-      (op == C_OP_EOR) ? {C_ALU_CTRL_EOR, C_ALU_SRC_A_A, C_ALU_DST_A} :
-      (op == C_OP_INC) ? {C_ALU_CTRL_INC, C_ALU_SRC_A_T, C_ALU_DST_T} :
-      (op == C_OP_INX) ? {C_ALU_CTRL_INC, C_ALU_SRC_A_X, C_ALU_DST_X} :
-      (op == C_OP_INY) ? {C_ALU_CTRL_INC, C_ALU_SRC_A_Y, C_ALU_DST_Y} :
-      (op == C_OP_LSR) ? {C_ALU_CTRL_LSR, exe_src_a_mem, exe_dst_a_mem} :
-      (op == C_OP_ORA) ? {C_ALU_CTRL_ORA, C_ALU_SRC_A_A, C_ALU_DST_A} :
-      (op == C_OP_ROL) ? {C_ALU_CTRL_ROL, exe_src_a_mem, exe_dst_a_mem} :
-      (op == C_OP_ROR) ? {C_ALU_CTRL_ROR, exe_src_a_mem, exe_dst_a_mem} :
-      (op == C_OP_SBC) ? {C_ALU_CTRL_SBC, C_ALU_SRC_A_A, C_ALU_DST_A} : 10'b0;
+  assign {exe_ctrl, exe_src_a} = (op == C_OP_ADC) ? {C_ALU_CTRL_ADC, C_ALU_SRC_A_A} :
+                                 (op == C_OP_AND) ? {C_ALU_CTRL_AND, C_ALU_SRC_A_A} :
+                                 (op == C_OP_BIT) ? {C_ALU_CTRL_BIT, C_ALU_SRC_A_A} :
+                                 (op == C_OP_CMP) ? {C_ALU_CTRL_CMP, C_ALU_SRC_A_A} :
+                                 (op == C_OP_CPX) ? {C_ALU_CTRL_CMP, C_ALU_SRC_A_X} :
+                                 (op == C_OP_CPY) ? {C_ALU_CTRL_CMP, C_ALU_SRC_A_Y} :
+                                 (op == C_OP_DEC) ? {C_ALU_CTRL_DEC, C_ALU_SRC_A_T} :
+                                 (op == C_OP_DEX) ? {C_ALU_CTRL_DEC, C_ALU_SRC_A_X} :
+                                 (op == C_OP_DEY) ? {C_ALU_CTRL_DEC, C_ALU_SRC_A_Y} :
+                                 (op == C_OP_EOR) ? {C_ALU_CTRL_EOR, C_ALU_SRC_A_A} :
+                                 (op == C_OP_INC) ? {C_ALU_CTRL_INC, C_ALU_SRC_A_T} :
+                                 (op == C_OP_INX) ? {C_ALU_CTRL_INC, C_ALU_SRC_A_X} :
+                                 (op == C_OP_INY) ? {C_ALU_CTRL_INC, C_ALU_SRC_A_Y} :
+                                 (op == C_OP_ORA) ? {C_ALU_CTRL_ORA, C_ALU_SRC_A_A} :
+                                 (op == C_OP_SBC) ? {C_ALU_CTRL_SBC, C_ALU_SRC_A_A} :
+                                 (op == C_OP_ASL) ? {C_ALU_CTRL_ASL, exe_src_a_mem} :
+                                 (op == C_OP_LSR) ? {C_ALU_CTRL_LSR, exe_src_a_mem} :
+                                 (op == C_OP_ROL) ? {C_ALU_CTRL_ROL, exe_src_a_mem} :
+                                 (op == C_OP_ROR) ? {C_ALU_CTRL_ROR, exe_src_a_mem} : 7'b0;
 
   //
   // Current/Next State
@@ -319,21 +325,30 @@ module controller(
         PCL_WE = 1'b1;
         PCH_WE = 1'b1;
 
-        // Execute
-        ALU_SRC_A = exe_src_a;
-        ALU_SRC_B = exe_src_b;
-        ALU_CTRL = exe_ctrl;
-
-        // Store ALUOut
-        A_WE = exe_dst == C_ALU_DST_A;
-        X_WE = exe_dst == C_ALU_DST_X;
-        Y_WE = exe_dst == C_ALU_DST_Y;
-        S_WE = exe_dst == C_ALU_DST_S;
-        REG_SRC = C_REG_SRC_ALU;
+        if (is_txr_op | is_ldr_op | is_plr_op) begin
+          // Move Register-Register
+          A_WE = mov_dst == C_REG_DST_A;
+          X_WE = mov_dst == C_REG_DST_X;
+          Y_WE = mov_dst == C_REG_DST_Y;
+          S_WE = mov_dst == C_REG_DST_S;
+          REG_SRC = mov_src;
+        end else begin
+          // Execute
+          ALU_CTRL = exe_ctrl;
+          ALU_SRC_A = exe_src_a;
+          ALU_SRC_B = C_ALU_SRC_B_T;
+          A_WE = exe_src_a == C_ALU_SRC_A_A;
+          X_WE = exe_src_a == C_ALU_SRC_A_X;
+          Y_WE = exe_src_a == C_ALU_SRC_A_Y;
+          S_WE = exe_src_a == C_ALU_SRC_A_S;
+          REG_SRC = C_REG_SRC_ALU;
+        end
 
         // Change Processor Status Register
         P_MASK = flag_mask;
-        if (exe_dst == C_ALU_DST_P)
+        if (mov_dst == C_REG_DST_P)
+          P_SRC = C_P_SRC_T; // PLP only
+        else if (exe_ctrl != C_ALU_CTRL_THA)
           P_SRC = C_P_SRC_ALU;
         else if (is_set_op)
           P_SRC = C_P_SRC_SET;
@@ -435,9 +450,9 @@ module controller(
         R_W = C_RW_W;
 
         // Execute
-        ALU_SRC_A = exe_src_a;
-        ALU_SRC_B = exe_src_b;
         ALU_CTRL = exe_ctrl;
+        ALU_SRC_A = exe_src_a;
+        ALU_SRC_B = C_ALU_SRC_B_T;
 
         // Temporary Register
         T_WE = 1'b1;

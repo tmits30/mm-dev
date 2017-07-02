@@ -154,15 +154,28 @@ localparam C_PCL_SRC_T   = 2'h2;
 localparam C_PCH_SRC_ADD = 1'b0;
 localparam C_PCH_SRC_MEM = 1'b1;
 
-localparam C_REG_SRC_MEM = 2'h0;
-localparam C_REG_SRC_DL  = 2'h1;
-localparam C_REG_SRC_ALU = 2'h2;
+localparam C_REG_SRC_A   = 3'h0;
+localparam C_REG_SRC_X   = 3'h1;
+localparam C_REG_SRC_Y   = 3'h2;
+localparam C_REG_SRC_S   = 3'h3;
+localparam C_REG_SRC_T   = 3'h4;
+localparam C_REG_SRC_P   = 3'h5;
+localparam C_REG_SRC_MEM = 3'h6;
+localparam C_REG_SRC_ALU = 3'h7;
 
-localparam C_P_SRC_MEM = 3'h0;
-localparam C_P_SRC_ALU = 3'h1;
-localparam C_P_SRC_SET = 3'h2;
-localparam C_P_SRC_CLR = 3'h3;
-localparam C_P_SRC_NON = 3'h4;
+localparam C_REG_DST_A   = 3'h0;
+localparam C_REG_DST_X   = 3'h1;
+localparam C_REG_DST_Y   = 3'h2;
+localparam C_REG_DST_S   = 3'h3;
+localparam C_REG_DST_T   = 3'h4;
+localparam C_REG_DST_P   = 3'h5;
+
+localparam C_P_SRC_T   = 3'h0;
+localparam C_P_SRC_MEM = 3'h1;
+localparam C_P_SRC_ALU = 3'h2;
+localparam C_P_SRC_SET = 3'h3;
+localparam C_P_SRC_CLR = 3'h4;
+localparam C_P_SRC_NON = 3'h5;
 
 localparam C_ALU_SRC_A_A   = 3'h0;
 localparam C_ALU_SRC_A_X   = 3'h1;
@@ -174,15 +187,6 @@ localparam C_ALU_SRC_A_MEM = 3'h5;
 localparam C_ALU_SRC_B_MEM = 2'h0;
 localparam C_ALU_SRC_B_T   = 2'h1;
 localparam C_ALU_SRC_B_H00 = 2'h2;
-
-localparam C_ALU_DST_NON = 3'h0;
-localparam C_ALU_DST_A   = 3'h1;
-localparam C_ALU_DST_X   = 3'h2;
-localparam C_ALU_DST_Y   = 3'h3;
-localparam C_ALU_DST_S   = 3'h4;
-localparam C_ALU_DST_T   = 3'h5;
-localparam C_ALU_DST_P   = 3'h6;
-localparam C_ALU_DST_MEM = 3'h7;
 
 localparam C_ABL_SRC_PCN = 3'h0; // Next Program Counter Low
 localparam C_ABL_SRC_PCC = 3'h1; // Current Program Counter Low
