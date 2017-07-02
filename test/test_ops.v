@@ -53,10 +53,12 @@ module test_ops();
 
 `include "test_ops_sbi.vh"
 `include "test_ops_iem.vh"
+`include "test_ops_str.vh"
 
   initial begin
     test_sbi; // Test for Single Byte Instructions
     test_iem; // Test for Internal Execution on Memory Instructions
+    test_str; // Test for Store Operations
     $finish;
   end
 
