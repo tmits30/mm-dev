@@ -1,0 +1,126 @@
+class InstructionDecoder(object):
+
+    def __init__(self):
+        self.name = [
+            'ADC', 'AND', 'ASL', 'BCC', 'BCS', 'BEQ', 'BIM', 'BIT',
+            'BMI', 'BNE', 'BPL', 'BRA', 'BRK', 'BVC', 'BVS', 'CLC',
+            'CLD', 'CLI', 'CLV', 'CMP', 'CPX', 'CPY', 'DEA', 'DEC',
+            'DEX', 'DEY', 'EOR', 'INA', 'INC', 'INX', 'INY', 'JMP',
+            'JSR', 'LDA', 'LDX', 'LDY', 'LSR', 'NOP', 'ORA', 'PHA',
+            'PHP', 'PHX', 'PHY', 'PLA', 'PLP', 'PLX', 'PLY', 'ROL',
+            'ROR', 'RTI', 'RTS', 'SBC', 'SEC', 'SED', 'SEI', 'STA',
+            'STX', 'STY', 'STZ', 'TAX', 'TAY', 'TRB', 'TSB', 'TSX',
+            'TXA', 'TXS', 'TYA'
+        ]
+        self.used = [
+            'ADC', 'AND', 'ASL', 'BCC', 'BCS', 'BEQ', 'BIT', 'BMI',
+            'BNE', 'BPL', 'BRK', 'BVC', 'BVS', 'CLC', 'CLD', 'CLI',
+            'CLV', 'CMP', 'CPX', 'CPY', 'DEC', 'DEX', 'DEY', 'EOR',
+            'INC', 'INX', 'INY', 'JMP', 'JSR', 'LDA', 'LDX', 'LDY',
+            'LSR', 'NOP', 'ORA', 'PHA', 'PHP', 'PLA', 'PLP', 'ROL',
+            'ROR', 'RTI', 'RTS', 'SBC', 'SEC', 'SED', 'SEI', 'STA',
+            'STX', 'STY', 'TAX', 'TAY', 'TSX', 'TXA', 'TXS', 'TYA',
+        ]
+        self.unused = [
+            'BRA', 'PHX', 'PHY', 'PLX', 'PLY', 'STZ', 'TRB', 'TSB',
+        ]
+        self.mode = [
+            'acc', 'abs', 'absx', 'absy', 'imm', 'impl', 'ind', 'indx',
+            'indy', 'rel', 'zpg', 'zpgx', 'zpgy'
+        ]
+        self.table = {
+            0x00: ('BRK', 'impl', 7), 0x01: ('ORA', 'indx', 6),
+            0x04: ('TSB', 'zpg',  3), 0x05: ('ORA', 'zpg',  3),
+            0x06: ('ASL', 'zpg',  5), 0x08: ('PHP', 'impl', 3),
+            0x09: ('ORA', 'imm',  2), 0x0a: ('ASL', 'acc',  2),
+            0x0c: ('TSB', 'abs',  4), 0x0d: ('ORA', 'abs',  4),
+            0x0e: ('ASL', 'abs',  6), 0x10: ('BPL', 'rel',  2),
+            0x11: ('ORA', 'indy', 5), 0x14: ('TRB', 'zpg',  3),
+            0x15: ('ORA', 'zpgx', 4), 0x16: ('ASL', 'zpgx', 6),
+            0x18: ('CLC', 'impl', 2), 0x19: ('ORA', 'absy', 4),
+            0x1a: ('INA', 'impl', 2), 0x1c: ('TRB', 'abs',  4),
+            0x1d: ('ORA', 'absx', 4), 0x1e: ('ASL', 'absx', 7),
+            0x20: ('JSR', 'abs',  6), 0x21: ('AND', 'indx', 6),
+            0x24: ('BIT', 'zpg',  3), 0x25: ('AND', 'zpg',  3),
+            0x26: ('ROL', 'zpg',  5), 0x28: ('PLP', 'impl', 4),
+            0x29: ('AND', 'imm',  2), 0x2a: ('ROL', 'acc',  2),
+            0x2c: ('BIT', 'abs',  4), 0x2d: ('AND', 'abs',  4),
+            0x2e: ('ROL', 'abs',  6), 0x30: ('BMI', 'rel',  2),
+            0x31: ('AND', 'indy', 5), 0x34: ('BIT', 'zpgx', 4),
+            0x35: ('AND', 'zpgx', 4), 0x36: ('ROL', 'zpgx', 6),
+            0x38: ('SEC', 'impl', 2), 0x39: ('AND', 'absy', 4),
+            0x3a: ('DEA', 'impl', 2), 0x3c: ('BIT', 'absx', 4),
+            0x3d: ('AND', 'absx', 4), 0x3e: ('ROL', 'absx', 7),
+            0x40: ('RTI', 'impl', 6), 0x41: ('EOR', 'indx', 6),
+            0x45: ('EOR', 'zpg',  3), 0x46: ('LSR', 'zpg',  5),
+            0x48: ('PHA', 'impl', 3), 0x49: ('EOR', 'imm',  2),
+            0x4a: ('LSR', 'acc',  2), 0x4c: ('JMP', 'abs',  3),
+            0x4d: ('EOR', 'abs',  4), 0x4e: ('LSR', 'abs',  6),
+            0x50: ('BVC', 'rel',  2), 0x51: ('EOR', 'indy', 5),
+            0x55: ('EOR', 'zpgx', 4), 0x56: ('LSR', 'zpgx', 6),
+            0x58: ('CLI', 'impl', 2), 0x59: ('EOR', 'absy', 4),
+            0x5a: ('PHY', 'impl', 3), 0x5d: ('EOR', 'absx', 4),
+            0x5e: ('LSR', 'absx', 7), 0x60: ('RTS', 'impl', 6),
+            0x61: ('ADC', 'indx', 6), 0x64: ('STZ', 'zpg',  3),
+            0x65: ('ADC', 'zpg',  3), 0x66: ('ROR', 'zpg',  5),
+            0x68: ('PLA', 'impl', 4), 0x69: ('ADC', 'imm',  2),
+            0x6a: ('ROR', 'acc',  2), 0x6c: ('JMP', 'ind',  5),
+            0x6d: ('ADC', 'abs',  4), 0x6e: ('ROR', 'abs',  6),
+            0x70: ('BVS', 'rel',  2), 0x71: ('ADC', 'indy', 5),
+            0x74: ('STZ', 'zpgx', 4), 0x75: ('ADC', 'zpgx', 4),
+            0x76: ('ROR', 'zpgx', 6), 0x78: ('SEI', 'impl', 2),
+            0x79: ('ADC', 'absy', 4), 0x7a: ('PLY', 'impl', 4),
+            0x7d: ('ADC', 'absx', 4), 0x7e: ('ROR', 'absx', 7),
+            0x80: ('BRA', 'rel',  2), 0x81: ('STA', 'indx', 6),
+            0x84: ('STY', 'zpg',  3), 0x85: ('STA', 'zpg',  3),
+            0x86: ('STX', 'zpg',  3), 0x88: ('DEY', 'impl', 2),
+            0x89: ('BIM', 'imm',  2), 0x8a: ('TXA', 'impl', 2),
+            0x8c: ('STY', 'abs',  4), 0x8d: ('STA', 'abs',  4),
+            0x8e: ('STX', 'abs',  4), 0x90: ('BCC', 'rel',  2),
+            0x91: ('STA', 'indy', 6), 0x94: ('STY', 'zpgx', 4),
+            0x95: ('STA', 'zpgx', 4), 0x96: ('STX', 'zpgy', 4),
+            0x98: ('TYA', 'impl', 2), 0x99: ('STA', 'absy', 5),
+            0x9a: ('TXS', 'impl', 2), 0x9c: ('STZ', 'abs',  4),
+            0x9d: ('STA', 'absx', 5), 0x9e: ('STZ', 'absx', 5),
+            0xa0: ('LDY', 'imm',  2), 0xa1: ('LDA', 'indx', 6),
+            0xa2: ('LDX', 'imm',  2), 0xa4: ('LDY', 'zpg',  3),
+            0xa5: ('LDA', 'zpg',  3), 0xa6: ('LDX', 'zpg',  3),
+            0xa8: ('TAY', 'impl', 2), 0xa9: ('LDA', 'imm',  2),
+            0xaa: ('TAX', 'impl', 2), 0xac: ('LDY', 'abs',  4),
+            0xad: ('LDA', 'abs',  4), 0xae: ('LDX', 'abs',  4),
+            0xb0: ('BCS', 'rel',  2), 0xb1: ('LDA', 'indy', 5),
+            0xb4: ('LDY', 'zpgx', 4), 0xb5: ('LDA', 'zpgx', 4),
+            0xb6: ('LDX', 'zpgy', 4), 0xb8: ('CLV', 'impl', 2),
+            0xb9: ('LDA', 'absy', 4), 0xba: ('TSX', 'impl', 2),
+            0xbc: ('LDY', 'absx', 4), 0xbd: ('LDA', 'absx', 4),
+            0xbe: ('LDX', 'absy', 4), 0xc0: ('CPY', 'imm',  2),
+            0xc1: ('CMP', 'indx', 6), 0xc4: ('CPY', 'zpg',  3),
+            0xc5: ('CMP', 'zpg',  3), 0xc6: ('DEC', 'zpg',  5),
+            0xc8: ('INY', 'impl', 2), 0xc9: ('CMP', 'imm',  2),
+            0xca: ('DEX', 'impl', 2), 0xcc: ('CPY', 'abs',  4),
+            0xcd: ('CMP', 'abs',  4), 0xce: ('DEC', 'abs',  6),
+            0xd0: ('BNE', 'rel',  2), 0xd1: ('CMP', 'indy', 5),
+            0xd5: ('CMP', 'zpgx', 4), 0xd6: ('DEC', 'zpgx', 6),
+            0xd8: ('CLD', 'impl', 2), 0xd9: ('CMP', 'absy', 4),
+            0xda: ('PHX', 'impl', 3), 0xdd: ('CMP', 'absx', 4),
+            0xde: ('DEC', 'absx', 7), 0xe0: ('CPX', 'imm',  2),
+            0xe1: ('SBC', 'indx', 6), 0xe4: ('CPX', 'zpg',  3),
+            0xe5: ('SBC', 'zpg',  3), 0xe6: ('INC', 'zpg',  5),
+            0xe8: ('INX', 'impl', 2), 0xe9: ('SBC', 'imm',  2),
+            0xea: ('NOP', 'impl', 2), 0xec: ('CPX', 'abs',  4),
+            0xed: ('SBC', 'abs',  4), 0xee: ('INC', 'abs',  6),
+            0xf0: ('BEQ', 'rel',  2), 0xf1: ('SBC', 'indy', 5),
+            0xf5: ('SBC', 'zpgx', 4), 0xf6: ('INC', 'zpgx', 6),
+            0xf8: ('SED', 'impl', 2), 0xf9: ('SBC', 'absy', 4),
+            0xfa: ('PLX', 'impl', 4), 0xfd: ('SBC', 'absx', 4),
+            0xfe: ('INC', 'absx', 7),
+        }
+        self.illegal = (None, None, None)
+
+    def __call__(self, byte):
+        """Return tuple (Instr-name, Addr-mode, cycles)"""
+        assert 0x00 <= byte <= 0xff
+        if byte not in self.table:
+            return self.illegal
+        ret = self.table[byte]
+        return self.illegal if ret[0] in self.unused else ret
