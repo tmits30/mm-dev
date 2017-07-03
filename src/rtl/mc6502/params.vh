@@ -144,8 +144,8 @@ localparam C_DB_OUT_SRC_X   = 3'h1;
 localparam C_DB_OUT_SRC_Y   = 3'h2;
 localparam C_DB_OUT_SRC_T   = 3'h3;
 localparam C_DB_OUT_SRC_P   = 3'h4;
-localparam C_DB_OUT_SRC_PCH = 3'h5;
-localparam C_DB_OUT_SRC_PCL = 3'h6;
+localparam C_DB_OUT_SRC_PCL = 3'h5;
+localparam C_DB_OUT_SRC_PCH = 3'h6;
 
 localparam C_PCL_SRC_ADD = 2'h0;
 localparam C_PCL_SRC_MEM = 2'h1;
