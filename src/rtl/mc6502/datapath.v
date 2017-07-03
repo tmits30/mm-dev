@@ -74,8 +74,8 @@ module datapath #(
   // Program Counter
   pcadder pcadder(.RES_N(res_n), .IL(pcl), .IH(pch), .SRC(DB_IN), .CTRL(PCADDER_CTRL), .OL(pcl_add), .OH(pch_add));
 
-  mux4 pcl_mux(.D0(pcl_add), .D1(dl), .D2(t), .S(PCL_SRC), .Y(pcl_wd));
-  mux2 pch_mux(.D0(pch_add), .D1(dl), .S(PCH_SRC), .Y(pch_wd));
+  mux4 pcl_mux(.D0(pcl_add), .D1(DB_IN), .D2(t), .S(PCL_SRC), .Y(pcl_wd));
+  mux2 pch_mux(.D0(pch_add), .D1(DB_IN), .S(PCH_SRC), .Y(pch_wd));
 
   flopenr #(P_PCL_INIT) pcl_reg(.CLK(CLK), .RES_N(RES_N), .WE(PCL_WE), .D(pcl_wd), .Q(pcl));
   flopenr #(P_PCH_INIT) pch_reg(.CLK(CLK), .RES_N(RES_N), .WE(PCH_WE), .D(pch_wd), .Q(pch));
@@ -90,7 +90,7 @@ module datapath #(
   flopenr #(8'h00) t_reg(.CLK(CLK), .RES_N(RES_N), .WE(T_WE), .D(reg_wd), .Q(t));
 
   // Processor Status Register
-  mux8 p_mux(.D0(t), .D1(dl), .D2(p_alu), .D3(p | P_MASK), .D4(p & ~P_MASK), .D5(p), .S(P_SRC), .Y(p_wd));
+  mux8 p_mux(.D0(t), .D1(DB_IN), .D2(p_alu), .D3(p | P_MASK), .D4(p & ~P_MASK), .D5(p), .S(P_SRC), .Y(p_wd));
 
   flopenr #(P_P_INIT) p_reg(.CLK(CLK), .RES_N(RES_N), .WE(1'b1), .D(p_wd), .Q(p));
 
