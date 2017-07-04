@@ -61,6 +61,7 @@ module datapath #(
   wire [7:0] a, x, y, s, t, p, pcl, pch;
   wire [7:0] pcl_add, pch_add, pcl_wd, pch_wd, reg_wd, p_alu, p_wd, abl_wd, abh_wd;
   wire [7:0] alu_src_a, alu_src_b, alu_out;
+  wire       pcc;
 
   // Instruction Register
   flopenr #(8'h00) ir_reg(
@@ -73,19 +74,21 @@ module datapath #(
 
   // Program Counter
   pcadder pcadder(
-    .RES_N (res_n),
+    .RES_N (RES_N),
     .IL    (pcl),
     .IH    (pch),
     .SRC   (DB_IN),
     .CTRL  (PCADDER_CTRL),
     .OL    (pcl_add),
-    .OH    (pch_add)
+    .OH    (pch_add),
+    .CARRY (pcc)
   );
 
   mux4 pcl_mux(
     .D0 (pcl_add),
     .D1 (DB_IN),
     .D2 (t),
+    .D3 (8'h00), // Not used
     .S  (PCL_SRC),
     .Y  (pcl_wd)
   );
@@ -169,6 +172,8 @@ module datapath #(
     .D3 (p | P_MASK),
     .D4 (p & ~P_MASK),
     .D5 (p),
+    .D6 (8'h00), // Not used
+    .D7 (8'h00), // Not used
     .S  (P_SRC),
     .Y  (p_wd)
   );
@@ -188,6 +193,9 @@ module datapath #(
     .D2 (y),
     .D3 (s),
     .D4 (t),
+    .D5 (8'h00), // Not used
+    .D6 (8'h00), // Not used
+    .D7 (8'h00), // Not used
     .S  (ALU_SRC_A),
     .Y  (alu_src_a)
   );
@@ -228,6 +236,7 @@ module datapath #(
     .D4 (8'h00),
     .D5 (8'h01),
     .D6 (8'hff),
+    .D7 (8'h00), // Not used
     .S  (ABH_SRC),
     .Y  (abh_wd)
   );
@@ -256,10 +265,11 @@ module datapath #(
     .D4 (p),
     .D5 (pcl),
     .D6 (pch),
+    .D7 (8'h00), // Not used
     .S  (DB_OUT_SRC),
     .Y  (DB_OUT)
   );
 
-  assign FLAG = (pcadder.carry << 8) | p;
+  assign FLAG = {pcc, p};
 
 endmodule

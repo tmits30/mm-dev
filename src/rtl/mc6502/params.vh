@@ -10,6 +10,7 @@ localparam C_FLAG_SHFT_B = 4;
 localparam C_FLAG_SHFT__ = 5;
 localparam C_FLAG_SHFT_V = 6;
 localparam C_FLAG_SHFT_N = 7;
+localparam C_FLAG_SHFT_PCC = 8;
 
 localparam C_FLAG_MASK_C = 8'h01; // Carry
 localparam C_FLAG_MASK_Z = 8'h02; // Zero
@@ -19,7 +20,6 @@ localparam C_FLAG_MASK_B = 8'h10; // Break
 localparam C_FLAG_MASK__ = 8'h20; // ignored
 localparam C_FLAG_MASK_V = 8'h40; // Overflow
 localparam C_FLAG_MASK_N = 8'h80; // Negative
-
 localparam C_FLAG_MASK_PCC = 9'h100;
 
 //------------------------------------------------------------------------------

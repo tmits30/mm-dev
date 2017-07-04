@@ -93,16 +93,16 @@ module controller(
 
   assign flag_mask = flag_signal(op);
 
-  function [7:0] flag_signal(input [5:0] op);
+  function [7:0] flag_signal(input [5:0] IN_OP);
     begin
-      case (op)
+      case (IN_OP)
         C_OP_CLC: flag_signal = C_FLAG_MASK_C;
         C_OP_SEC: flag_signal = C_FLAG_MASK_C;
         C_OP_CLD: flag_signal = C_FLAG_MASK_D;
         C_OP_SED: flag_signal = C_FLAG_MASK_D;
         C_OP_CLI: flag_signal = C_FLAG_MASK_I;
         C_OP_SEI: flag_signal = C_FLAG_MASK_I;
-        C_OP_CLI: flag_signal = C_FLAG_MASK_V;
+        C_OP_CLV: flag_signal = C_FLAG_MASK_V;
         default:  flag_signal = 8'h00;
       endcase
     end
@@ -113,25 +113,25 @@ module controller(
   //
   wire is_branch;
 
-  assign is_branch = ((op == C_OP_BCC) && !(FLAG & C_FLAG_MASK_C)) ||
-                     ((op == C_OP_BCS) &&  (FLAG & C_FLAG_MASK_C)) ||
-                     ((op == C_OP_BNE) && !(FLAG & C_FLAG_MASK_Z)) ||
-                     ((op == C_OP_BEQ) &&  (FLAG & C_FLAG_MASK_Z)) ||
-                     ((op == C_OP_BVC) && !(FLAG & C_FLAG_MASK_V)) ||
-                     ((op == C_OP_BVS) &&  (FLAG & C_FLAG_MASK_V)) ||
-                     ((op == C_OP_BPL) && !(FLAG & C_FLAG_MASK_N)) ||
-                     ((op == C_OP_BMI) &&  (FLAG & C_FLAG_MASK_N));
+  assign is_branch = ((op == C_OP_BCC) && !FLAG[C_FLAG_SHFT_C]) ||
+                     ((op == C_OP_BCS) &&  FLAG[C_FLAG_SHFT_C]) ||
+                     ((op == C_OP_BNE) && !FLAG[C_FLAG_SHFT_Z]) ||
+                     ((op == C_OP_BEQ) &&  FLAG[C_FLAG_SHFT_Z]) ||
+                     ((op == C_OP_BVC) && !FLAG[C_FLAG_SHFT_V]) ||
+                     ((op == C_OP_BVS) &&  FLAG[C_FLAG_SHFT_V]) ||
+                     ((op == C_OP_BPL) && !FLAG[C_FLAG_SHFT_N]) ||
+                     ((op == C_OP_BMI) &&  FLAG[C_FLAG_SHFT_N]);
 
   //
   // Move Src-Dst Register
   //
-  wire [3:0] mov_src, mov_dst;
+  wire [2:0] mov_src, mov_dst;
 
   assign {mov_src, mov_dst} = mov_signal(op);
 
-  function [5:0] mov_signal(input [5:0] op);
+  function [5:0] mov_signal(input [5:0] IN_OP);
     begin
-      case (op)
+      case (IN_OP)
         C_OP_LDA: mov_signal = {C_REG_DST_T, C_REG_DST_A};
         C_OP_LDX: mov_signal = {C_REG_DST_T, C_REG_DST_X};
         C_OP_LDY: mov_signal = {C_REG_DST_T, C_REG_DST_Y};
@@ -156,10 +156,10 @@ module controller(
 
   assign {exe_ctrl, exe_src_a} = exe_signal(op, addr_mode);
 
-  function [6:0] exe_signal(input [5:0] op, input [3:0] addr_mode);
+  function [6:0] exe_signal(input [5:0] IN_OP, input [3:0] IN_AM);
     begin
-      if (addr_mode == C_ADDR_MODE_ACC)
-        case (op)
+      if (IN_AM == C_ADDR_MODE_ACC)
+        case (IN_OP)
           C_OP_ASL: exe_signal = {C_ALU_CTRL_ASL, C_ALU_SRC_A_A};
           C_OP_LSR: exe_signal = {C_ALU_CTRL_LSR, C_ALU_SRC_A_A};
           C_OP_ROL: exe_signal = {C_ALU_CTRL_ROL, C_ALU_SRC_A_A};
@@ -167,7 +167,7 @@ module controller(
           default:  exe_signal = 7'b0;
         endcase
       else
-        case (op)
+        case (IN_OP)
           C_OP_ADC: exe_signal = {C_ALU_CTRL_ADC, C_ALU_SRC_A_A};
           C_OP_AND: exe_signal = {C_ALU_CTRL_AND, C_ALU_SRC_A_A};
           C_OP_BIT: exe_signal = {C_ALU_CTRL_BIT, C_ALU_SRC_A_A};
@@ -245,7 +245,7 @@ module controller(
           default: nxt_state = C_STATE_T0_R_OPCO;
         endcase
       C_STATE_TX_R_DATB:
-        if (is_rmw_op || FLAG & C_FLAG_MASK_C)
+        if (is_rmw_op || FLAG[C_FLAG_SHFT_C])
           nxt_state = C_STATE_TX_R_DATA;
         else if (is_str_op)
           nxt_state = C_STATE_TX_W_DATA;
@@ -284,7 +284,7 @@ module controller(
       C_STATE_T2_INY_AM: nxt_state = C_STATE_T3_INY_AM;
       C_STATE_T3_INY_AM: nxt_state = C_STATE_TX_R_DATB;
       C_STATE_T2_REL_AM:
-        if (FLAG & C_FLAG_MASK_PCC)
+        if (FLAG[C_FLAG_SHFT_PCC])
           nxt_state = C_STATE_T3_REL_AM;
         else
           nxt_state = C_STATE_T0_R_OPCO;
@@ -450,7 +450,7 @@ module controller(
         T_WE = 1'b1;
 
         // Address Bus
-        if (FLAG & C_FLAG_MASK_C || is_rmw_op) begin
+        if (FLAG[C_FLAG_SHFT_C] || is_rmw_op) begin
           // ADH + C, ADL
           ABH_SRC = C_ABH_SRC_ALU;
           ABH_WE = 1'b1;
@@ -995,6 +995,8 @@ module controller(
         ABH_SRC = C_ABH_SRC_PCN;
         ABL_WE = 1'b1;
         ABH_WE = 1'b1;
+      end
+      default: begin
       end
     endcase
   end

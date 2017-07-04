@@ -21,24 +21,24 @@ module alu(
   assign sub_ab = A - B;
   assign shl_a = A << 1;
   assign shr_a = A >> 1;
-  assign in_carry = FLAG_IN & C_FLAG_MASK_C;
+  assign in_carry = FLAG_IN[C_FLAG_SHFT_C];
 
   always @(*) begin
-    flag_c = FLAG_IN & 1'b1;
-    flag_z = (FLAG_IN >> 1) & 1'b1;
-    flag_v = (FLAG_IN >> 6) & 1'b1;
-    flag_n = (FLAG_IN >> 7) & 1'b1;
+    flag_c = FLAG_IN[C_FLAG_SHFT_C];
+    flag_z = FLAG_IN[C_FLAG_SHFT_Z];
+    flag_v = FLAG_IN[C_FLAG_SHFT_V];
+    flag_n = FLAG_IN[C_FLAG_SHFT_N];
 
     if (CTRL == C_ALU_CTRL_THA) begin
-      ret = A;
+      ret[7:0] = A;
     end else if (CTRL == C_ALU_CTRL_BIT) begin
-      flag_n = (B & 8'h80) >> 7;
-      flag_v = (B & 8'h40) >> 6;
-      flag_z = (and_ab == 8'h00);
+      flag_n = B[7];
+      flag_v = B[6];
+      flag_z = and_ab == 8'h00;
     end else if (CTRL == C_ALU_CTRL_CMP) begin
-      flag_n = (sub_ab & 8'h80) >> 7;
-      flag_z = (sub_ab[7:0] == 8'h00);
-      flag_c = (sub_ab & 9'h100) >> 8;
+      flag_n = sub_ab[7];
+      flag_z = sub_ab[7:0] == 8'h00;
+      flag_c = sub_ab[8];
     end else begin
       case (CTRL)
         C_ALU_CTRL_INC: begin
@@ -48,48 +48,51 @@ module alu(
           ret = A - 8'h01;
         end
         C_ALU_CTRL_ASL: begin
-          ret = shl_a;
-          flag_c = A >> 7;
+          ret[7:0] = shl_a;
+          flag_c = A[7];
         end
         C_ALU_CTRL_LSR: begin
-          ret = shr_a;
-          flag_c = A & 1'b1;
+          ret[7:0] = shr_a;
+          flag_c = A[1];
         end
         C_ALU_CTRL_ROL: begin
-          ret = shl_a | in_carry;
-          flag_c = A >> 7;
+          ret = {shl_a, in_carry};
+          flag_c = A[7];
         end
         C_ALU_CTRL_ROR: begin
-          ret = (in_carry << 7) | shr_a;
-          flag_c = A & 1'b1;
+          ret = {in_carry, shr_a};
+          flag_c = A[1];
         end
         C_ALU_CTRL_AND: begin
-          ret = and_ab;
+          ret[7:0] = and_ab;
         end
         C_ALU_CTRL_ORA: begin
-          ret = A | B;
+          ret[7:0] = A | B;
         end
         C_ALU_CTRL_EOR: begin
-          ret = A ^ B;
+          ret[7:0] = A ^ B;
         end
         C_ALU_CTRL_ADC: begin
-          ret = add_ab + in_carry;
-          flag_c = (ret & 9'h100) >> 8;
+          ret = add_ab + {7'b0, in_carry};
+          flag_c = ret[8];
         end
         C_ALU_CTRL_SBC: begin
-          ret = sub_ab + in_carry - 1;
-          flag_c = (ret & 9'h100) >> 8;
+          ret = sub_ab + {7'b0, in_carry} - 8'b1;
+          flag_c = ret[8];
         end
         default: begin
-          ret = A;
+          ret[7:0] = A;
         end
       endcase
-      flag_n = (ret & 8'h80) >> 7;
-      flag_z = (ret == 8'h00);
+      flag_n = ret[7];
+      flag_z = ret[7:0] == 8'h00;
     end
   end
 
   assign OUT = ret[7:0];
-  assign FLAG_OUT = FLAG_IN | (flag_n << 7) | (flag_v << 6)| (flag_z << 2) | flag_c;
+  assign FLAG_OUT = {flag_n, flag_v,
+                     FLAG_IN[C_FLAG_SHFT__], FLAG_IN[C_FLAG_SHFT_B],
+                     FLAG_IN[C_FLAG_SHFT_D], FLAG_IN[C_FLAG_SHFT_I],
+                     flag_z, flag_c};
 
 endmodule
