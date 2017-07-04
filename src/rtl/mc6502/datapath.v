@@ -24,13 +24,13 @@ module datapath #(
 
   // Program Counter Control
   input [1:0]  PCADDER_CTRL,
-  input [1:0]  PCL_SRC, // DL / T / PCLAdd
-  input [0:0]  PCH_SRC, // DL / PCLAdd
+  input [1:0]  PCL_SRC,
+  input [0:0]  PCH_SRC,
   input        PCL_WE,
   input        PCH_WE,
 
   // Registers Control
-  input [2:0]  REG_SRC, // DL / ALUout
+  input [2:0]  REG_SRC,
   input        A_WE,
   input        X_WE,
   input        Y_WE,

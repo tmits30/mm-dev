@@ -20,13 +20,13 @@ module controller(
 
   // Program Counter Control
   output reg [1:0] PCADDER_CTRL,
-  output reg [1:0] PCL_SRC, // DL / T / PCLAdd
-  output reg [0:0] PCH_SRC, // DL / PCLAdd
+  output reg [1:0] PCL_SRC,
+  output reg [0:0] PCH_SRC,
   output reg       PCL_WE,
   output reg       PCH_WE,
 
   // Registers Control
-  output reg [2:0] REG_SRC, // DL / ALUout
+  output reg [2:0] REG_SRC,
   output reg       A_WE,
   output reg       X_WE,
   output reg       Y_WE,
@@ -62,7 +62,8 @@ module controller(
   //
   // Special Operation
   //
-  wire is_ldr_op, is_str_op, is_plr_op, is_txr_op, is_rmw_op, is_set_op, is_clr_op;
+  wire is_ldr_op, is_str_op, is_plr_op, is_txr_op, is_rmw_op;
+  wire is_set_op, is_clr_op; // flag set/clear
 
   // Load Operations
   assign is_ldr_op = (op == C_OP_LDA) | (op == C_OP_LDX) | (op == C_OP_LDY);
@@ -85,7 +86,8 @@ module controller(
   assign is_set_op = (op == C_OP_SEC) | (op == C_OP_SED) | (op == C_OP_SEI);
 
   // Clear Flag Operations
-  assign is_clr_op = (op == C_OP_CLC) | (op == C_OP_CLD) | (op == C_OP_CLI) | (op == C_OP_CLV);
+  assign is_clr_op = (op == C_OP_CLC) | (op == C_OP_CLD) | (op == C_OP_CLI) |
+                     (op == C_OP_CLV);
 
   //
   // Target for Flag Operations
@@ -298,18 +300,22 @@ module controller(
   // Output Controll Signals
   //
   always @(*) begin
+    // Data Bus
     R_W = C_RW_R;
     DB_OUT_SRC = C_DB_OUT_SRC_A;
 
+    // Input Data Latch
     DL_WE = 1'b0;
+
+    // Instruction Register
     IR_WE = 1'b0;
 
-    PCADDER_CTRL = C_PCADDER_CTRL_NOP;
-    PCL_SRC = C_PCL_SRC_MEM;
-    PCH_SRC = C_PCH_SRC_MEM;
-    PCL_WE = 1'b0;
-    PCH_WE = 1'b0;
+    // Execute
+    ALU_CTRL = C_ALU_CTRL_THA;
+    ALU_SRC_A = C_ALU_SRC_A_A;
+    ALU_SRC_B = C_ALU_SRC_B_T;
 
+    // Registers
     REG_SRC = C_REG_SRC_MEM;
     A_WE = 1'b0;
     X_WE = 1'b0;
@@ -317,13 +323,18 @@ module controller(
     S_WE = 1'b0;
     T_WE = 1'b0;
 
+    // Processor Status Register
     P_SRC = C_P_SRC_ALU;
     P_MASK = 8'h00;
 
-    ALU_CTRL = C_ALU_CTRL_THA;
-    ALU_SRC_A = C_ALU_SRC_A_A; // default: A
-    ALU_SRC_B = C_ALU_SRC_B_T; // default: t
+    // Program Counter
+    PCADDER_CTRL = C_PCADDER_CTRL_NOP;
+    PCL_SRC = C_PCL_SRC_MEM;
+    PCH_SRC = C_PCH_SRC_MEM;
+    PCL_WE = 1'b0;
+    PCH_WE = 1'b0;
 
+    // Address Bus
     ABL_SRC = C_ABL_SRC_PCN;
     ABH_SRC = C_ABH_SRC_PCN;
     ABL_WE = 1'b0;
@@ -334,30 +345,23 @@ module controller(
         // Instruction Register
         IR_WE = 1'b1;
 
-        // Program Counter
-        PCADDER_CTRL = C_PCADDER_CTRL_INC;
-        PCL_SRC = C_PCL_SRC_ADD;
-        PCH_SRC = C_PCH_SRC_ADD;
-        PCL_WE = 1'b1;
-        PCH_WE = 1'b1;
+        // Execute
+        ALU_CTRL = exe_ctrl;
+        ALU_SRC_A = exe_src_a;
+        ALU_SRC_B = C_ALU_SRC_B_T;
 
         if (is_txr_op | is_ldr_op | is_plr_op) begin
-          // Move Register-Register
+          REG_SRC = mov_src;
           A_WE = mov_dst == C_REG_DST_A;
           X_WE = mov_dst == C_REG_DST_X;
           Y_WE = mov_dst == C_REG_DST_Y;
           S_WE = mov_dst == C_REG_DST_S;
-          REG_SRC = mov_src;
         end else begin
-          // Execute
-          ALU_CTRL = exe_ctrl;
-          ALU_SRC_A = exe_src_a;
-          ALU_SRC_B = C_ALU_SRC_B_T;
+          REG_SRC = C_REG_SRC_ALU;
           A_WE = exe_src_a == C_ALU_SRC_A_A;
           X_WE = exe_src_a == C_ALU_SRC_A_X;
           Y_WE = exe_src_a == C_ALU_SRC_A_Y;
           S_WE = exe_src_a == C_ALU_SRC_A_S;
-          REG_SRC = C_REG_SRC_ALU;
         end
 
         // Change Processor Status Register
@@ -373,11 +377,25 @@ module controller(
         else
           P_SRC = C_P_SRC_NON;
 
-        // Address Bus PC (fetch data from the address at next cycle)
+        // Program Counter
+        PCADDER_CTRL = C_PCADDER_CTRL_INC;
+        PCL_SRC = C_PCL_SRC_ADD;
+        PCH_SRC = C_PCH_SRC_ADD;
+        PCL_WE = 1'b1;
+        PCH_WE = 1'b1;
+
+        // Address Bus (PC)
         ABL_WE = 1'b1;
         ABH_WE = 1'b1;
       end
       C_STATE_T1_R_OPER: begin
+        // Input Data latch
+        DL_WE = 1'b1;
+
+        // Temporary Reigister
+        REG_SRC = C_REG_SRC_MEM;
+        T_WE = 1'b1;
+
         // Program Counter
         if (addr_mode == C_ADDR_MODE_IMP)
           PCADDER_CTRL = C_PCADDER_CTRL_NOP;
@@ -390,16 +408,7 @@ module controller(
         PCL_WE = 1'b1;
         PCH_WE = 1'b1;
 
-        // Input Data latch
-        DL_WE = 1'b1;
-
-        // Temporary Reigister
-        T_WE = 1'b1;
-        REG_SRC = C_REG_SRC_MEM;
-
-        // Address Bus (fetch data from the address at next cycle)
-        ABL_WE = 1'b1;
-        ABH_WE = 1'b1;
+        // Address Bus
         if (addr_mode == C_ADDR_MODE_INX ||
             addr_mode == C_ADDR_MODE_INY ||
             addr_mode == C_ADDR_MODE_ZPG ||
@@ -417,33 +426,36 @@ module controller(
           ABL_SRC = C_ABL_SRC_PCN;
           ABH_SRC = C_ABH_SRC_PCN;
         end
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_TX_R_DATB: begin
         // Input Data latch
         DL_WE = 1'b1;
 
         // Execute ADH + C
+        ALU_CTRL = C_ALU_CTRL_ADC;
         ALU_SRC_A = C_ALU_SRC_A_T;
         ALU_SRC_B = C_ALU_SRC_B_H00;
-        ALU_CTRL = C_ALU_CTRL_ADC;
 
         // Temporary Register (Data)
-        T_WE = 1'b1;
         REG_SRC = C_REG_SRC_MEM;
+        T_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
+        // Address Bus
         if (FLAG & C_FLAG_MASK_C || is_rmw_op) begin
-          // - ADH + C, ADL
-          ABH_WE = 1'b1;
+          // ADH + C, ADL
           ABH_SRC = C_ABH_SRC_ALU;
+          ABH_WE = 1'b1;
         end else if (is_str_op) begin
           ABL_WE = 1'b0;
           ABH_WE = 1'b0;
         end else begin
-          ABL_WE = 1'b1;
+          // PC
           ABL_SRC = C_ABL_SRC_PCC;
-          ABH_WE = 1'b1;
           ABH_SRC = C_ABH_SRC_PCC;
+          ABL_WE = 1'b1;
+          ABH_WE = 1'b1;
         end
       end
       C_STATE_TX_R_DATA: begin
@@ -451,18 +463,19 @@ module controller(
         DL_WE = 1'b1;
 
         // Temporary Register
-        T_WE = 1'b1;
         REG_SRC = C_REG_SRC_MEM;
+        T_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
+        // Address Bus
         if (!is_rmw_op) begin
-          ABL_WE = 1'b1;
           ABL_SRC = C_ABL_SRC_PCC;
-          ABH_WE = 1'b1;
           ABH_SRC = C_ABH_SRC_PCC;
+          ABL_WE = 1'b1;
+          ABH_WE = 1'b1;
         end
       end
       C_STATE_TX_M_DATA: begin
+        // Data Bus
         R_W = C_RW_W;
 
         // Execute
@@ -471,8 +484,8 @@ module controller(
         ALU_SRC_B = C_ALU_SRC_B_T;
 
         // Temporary Register
-        T_WE = 1'b1;
         REG_SRC = C_REG_SRC_ALU;
+        T_WE = 1'b1;
       end
       C_STATE_TX_W_DATA: begin
         // Data Bus
@@ -486,11 +499,11 @@ module controller(
         else
           DB_OUT_SRC = C_DB_OUT_SRC_T;
 
-        // Address Bus (fetch data from the address at next cycle)
-        ABL_WE = 1'b1;
+        // Address Bus
         ABL_SRC = C_ABL_SRC_PCC;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_PCC;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T2_ABS_AM: begin
         // Input Data Latch (ADH)
@@ -511,13 +524,12 @@ module controller(
         PCL_WE = 1'b1;
         PCH_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
+        // Address Bus (ADH, ADL)
         if (op != C_OP_JSR) begin
-          // - ADH, ADL
-          ABL_WE = 1'b1;
           ABL_SRC = C_ABL_SRC_T;
-          ABH_WE = 1'b1;
           ABH_SRC = C_ABH_SRC_MEM;
+          ABL_WE = 1'b1;
+          ABH_WE = 1'b1;
         end
       end
       C_STATE_T3_JSR_OP: begin
@@ -526,20 +538,19 @@ module controller(
         DB_OUT_SRC = C_DB_OUT_SRC_PCH;
 
         // Execute S - 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_DEC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
 
         // Processor Status Register
         P_SRC = C_P_SRC_NON; // NOT from ALU
 
         // Update Stack Pointer
-        S_WE = 1'b1;
         REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - 0x01, S - 1
-        ABL_WE = 1'b1;
+        // Address Bus (0x01, S - 1)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T4_JSR_OP: begin
         // Data Bus
@@ -547,41 +558,54 @@ module controller(
         DB_OUT_SRC = C_DB_OUT_SRC_PCL;
 
         // Execute (S - 1) - 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_DEC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
 
         // Processor Status Register
         P_SRC = C_P_SRC_NON; // NOT from ALU
 
         // Update Stack Pointer
-        S_WE = 1'b1;
         REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - PC + 2
-        ABL_WE = 1'b1;
+        // Address Bus (PC + 2)
         ABL_SRC = C_ABL_SRC_PCC;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_PCC;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T5_JSR_OP: begin
         // Input Data Latch (ADH)
         DL_WE = 1'b1;
 
         // Program Counter
-        PCL_WE = 1'b1;
         PCL_SRC = C_PCL_SRC_T;
-        PCH_WE = 1'b1;
         PCH_SRC = C_PCH_SRC_MEM;
+        PCL_WE = 1'b1;
+        PCH_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - ADH, ADL
-        ABL_WE = 1'b1;
+        // Address Bus (ADH, ADL)
         ABL_SRC = C_ABL_SRC_T;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_MEM;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T2_ABR_AM: begin
+        // Input Data Latch (BAH)
+        DL_WE = 1'b1;
+
+        // Execute BAL + index register
+        ALU_CTRL = C_ALU_CTRL_ADC;
+        if (addr_mode == C_ADDR_MODE_ABX)
+          ALU_SRC_A = C_ALU_SRC_A_X;
+        else
+          ALU_SRC_A = C_ALU_SRC_A_Y;
+        ALU_SRC_B = C_ALU_SRC_B_T;
+
+        // Temporary Register (BAH) for C_STATE_TX_R_DATB
+        REG_SRC = C_REG_SRC_MEM;
+        T_WE = 1'b1;
+
         // Program Counter
         PCADDER_CTRL = C_PCADDER_CTRL_INC;
         PCL_SRC = C_PCL_SRC_ADD;
@@ -589,27 +613,11 @@ module controller(
         PCL_WE = 1'b1;
         PCH_WE = 1'b1;
 
-        // Input Data Latch (BAH)
-        DL_WE = 1'b1;
-
-        // Execute BAL + index register
-        if (addr_mode == C_ADDR_MODE_ABX)
-          ALU_SRC_A = C_ALU_SRC_A_X;
-        else
-          ALU_SRC_A = C_ALU_SRC_A_Y;
-        ALU_SRC_B = C_ALU_SRC_B_T;
-        ALU_CTRL = C_ALU_CTRL_ADC;
-
-        // Temporary Register (BAH) for 'Tx_fetch_data_c0'
-        T_WE = 1'b1;
-        REG_SRC = C_REG_SRC_MEM;
-
-        // Address Bus (fetch data from the address at next cycle)
-        // - BAH, BAL + index register
-        ABL_WE = 1'b1;
+        // Address Bus (BAH, BAL + index register)
         ABL_SRC = C_ABL_SRC_ALU;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_MEM;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T2_IND_AM: begin
         // Input Data Latch (IAH)
@@ -622,126 +630,118 @@ module controller(
         PCL_WE = 1'b1;
         PCH_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - IAH, IAL
-        ABL_WE = 1'b1;
+        // Address Bus (IAH, IAL)
         ABL_SRC = C_ABL_SRC_T;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_MEM;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T3_IND_AM: begin
         // Input Data Latch (ADL)
         DL_WE = 1'b1;
 
         // Execute IAL + 1
-        ALU_SRC_A = C_ALU_SRC_A_T;
         ALU_CTRL = C_ALU_CTRL_INC;
+        ALU_SRC_A = C_ALU_SRC_A_T;
 
         // Temporary Reigister (ADL)
-        T_WE = 1'b1;
         REG_SRC = C_REG_SRC_MEM;
+        T_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - IAH, IAL + 1
-        ABL_WE = 1'b1;
+        // Address Bus (IAH, IAL + 1)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T4_IND_AM: begin
         // Input Data Latch (ADH)
         DL_WE = 1'b1;
 
         // Program Counter
-        PCL_WE = 1'b1;
         PCL_SRC = C_PCL_SRC_T;
-        PCH_WE = 1'b1;
         PCH_SRC = C_PCH_SRC_MEM;
+        PCL_WE = 1'b1;
+        PCH_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - ADH, ADL
-        ABL_WE = 1'b1;
+        // Address Bus (ADH, ADL)
         ABL_SRC = C_ABL_SRC_T;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_MEM;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T2_INX_AM: begin
         // Execute BAL + X
+        ALU_CTRL = C_ALU_CTRL_ADC;
         ALU_SRC_A = C_ALU_SRC_A_X;
         ALU_SRC_B = C_ALU_SRC_B_MEM;
-        ALU_CTRL = C_ALU_CTRL_ADC;
 
         // Temporary Register (BAL + X)
-        T_WE = 1'b1;
         REG_SRC = C_REG_SRC_ALU;
+        T_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - 00, BAL + X
-        ABL_WE = 1'b1;
+        // Address Bus (00, BAL + X)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T3_INX_AM: begin
         // Input Data Latch (ADL)
         DL_WE = 1'b1;
 
         // Execute (BAL + X) + 1
-        ALU_SRC_A = C_ALU_SRC_A_T;
         ALU_CTRL = C_ALU_CTRL_INC;
+        ALU_SRC_A = C_ALU_SRC_A_T;
 
         // Temporary Register (ADL)
-        T_WE = 1'b1;
         REG_SRC = C_REG_SRC_MEM;
+        T_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - 00, BAL + X + 1
-        ABL_WE = 1'b1;
+        // Address Bus (00, BAL + X + 1)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T4_INX_AM: begin
         // Input Data Latch (ADH)
         DL_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - ADH, ADL
-        ABL_WE = 1'b1;
+        // Address Bus (ADH, ADL)
         ABL_SRC = C_ABL_SRC_T;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_MEM;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T2_INY_AM: begin
         // Input Data Latch (BAL)
         DL_WE = 1'b1;
 
         // Execute IAL + 1
-        ALU_SRC_A = C_ALU_SRC_A_T;
         ALU_CTRL = C_ALU_CTRL_INC;
+        ALU_SRC_A = C_ALU_SRC_A_T;
 
         // Temporary Register (BAL)
-        T_WE = 1'b1;
         REG_SRC = C_REG_SRC_MEM;
+        T_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - 00, IAL + 1
-        ABL_WE = 1'b1;
+        // Address Bus (00, IAL + 1)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T3_INY_AM: begin
         // Input Data Latch (BAH)
         DL_WE = 1'b1;
 
         // Execute BAL + Y
+        ALU_CTRL = C_ALU_CTRL_ADC;
         ALU_SRC_A = C_ALU_SRC_A_Y;
         ALU_SRC_B = C_ALU_SRC_B_T;
-        ALU_CTRL = C_ALU_CTRL_ADC;
 
-        // Temporary Register (BAH) for 'Tx_fetch_data_c0'
-        T_WE = 1'b1;
+        // Temporary Register (BAH) for C_STATE_TX_F_DATB
         REG_SRC = C_REG_SRC_MEM;
+        T_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - BAH, BAL + Y
-        ABL_WE = 1'b1;
+        // Address Bus (BAH, BAL + Y)
         ABL_SRC = C_ABL_SRC_ALU;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_MEM;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T2_REL_AM: begin
         // Program Counter Adder
@@ -751,28 +751,26 @@ module controller(
         PCL_WE = 1'b1;
         PCH_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - PCH, (PCL + 2) + offset
-        ABH_WE = 1'b1;
+        // Address Bus (PCH, (PCL + 2) + offset)
+        ABL_SRC = C_ABL_SRC_PCN;
         ABH_SRC = C_ABH_SRC_PCN;
         ABL_WE = 1'b1;
-        ABL_SRC = C_ABL_SRC_PCN;
+        ABH_WE = 1'b1;
       end
       C_STATE_T3_REL_AM: begin
       end
       C_STATE_T2_ZPR_AM: begin
         // Execute BAL + index register
+        ALU_CTRL = C_ALU_CTRL_ADC;
         if (addr_mode == C_ADDR_MODE_ZPX)
           ALU_SRC_A = C_ALU_SRC_A_X;
         else
           ALU_SRC_A = C_ALU_SRC_A_Y;
         ALU_SRC_B = C_ALU_SRC_B_MEM;
-        ALU_CTRL = C_ALU_CTRL_ADC;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - ADH, ADL
-        ABL_WE = 1'b1;
+        // Address Bus (ADH, ADL)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T2_BRK_OP: begin
         // Data Bus
@@ -780,22 +778,21 @@ module controller(
         DB_OUT_SRC = C_DB_OUT_SRC_PCH;
 
         // Execute S - 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_DEC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
+
+        // Update Stack Pointer
+        REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
         // Processor Status Register
         P_SRC = C_P_SRC_NON; // NOT from ALU
 
-        // Update Stack Pointer
-        S_WE = 1'b1;
-        REG_SRC = C_REG_SRC_ALU;
-
-        // Address Bus (fetch data from the address at next cycle)
-        // - 0x01, S - 1
-        ABL_WE = 1'b1;
+        // Address Bus (0x01, S - 1)
         ABL_SRC = C_ABL_SRC_ALU;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_H01;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T3_BRK_OP: begin
         // Data Bus
@@ -803,22 +800,21 @@ module controller(
         DB_OUT_SRC = C_DB_OUT_SRC_PCL;
 
         // Execute (S - 1) - 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_DEC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
+
+        // Update Stack Pointer
+        REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
         // Processor Status Register
         P_SRC = C_P_SRC_NON; // NOT from ALU
 
-        // Update Stack Pointer
-        S_WE = 1'b1;
-        REG_SRC = C_REG_SRC_ALU;
-
-        // Address Bus (fetch data from the address at next cycle)
-        // - 0x01, (S - 1) - 1
-        ABL_WE = 1'b1;
+        // Address Bus (0x01, (S - 1) - 1)
         ABL_SRC = C_ABL_SRC_ALU;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_H01;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T4_BRK_OP: begin
         // Data Bus
@@ -826,73 +822,70 @@ module controller(
         DB_OUT_SRC = C_DB_OUT_SRC_P;
 
         // Execute ((S - 1) - 1) - 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_DEC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
+
+        // Update Stack Pointer
+        REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
         // Processor Status Register
         P_SRC = C_P_SRC_NON; // NOT from ALU
 
-        // Update Stack Pointer
-        S_WE = 1'b1;
-        REG_SRC = C_REG_SRC_ALU;
-
-        // Address Bus (fetch data from the address at next cycle)
-        // - FF, FE
-        ABL_WE = 1'b1;
+        // Address Bus (FF, FE)
         ABL_SRC = C_ABL_SRC_HFE;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_HFF;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T5_BRK_OP: begin
         // Input Data latch (ADL)
         DL_WE = 1'b1;
 
         // Temporary Register (ADL)
-        T_WE = 1'b1;
         REG_SRC = C_REG_SRC_MEM;
+        T_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - FF, FF
-        ABL_WE = 1'b1;
+        // Address Bus (FF, FF)
         ABL_SRC = C_ABL_SRC_HFF;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_HFF;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T6_BRK_OP: begin
         // Input Data latch (ADH)
         DL_WE = 1'b1;
 
         // Program Counter
-        PCL_WE = 1'b1;
         PCL_SRC = C_PCL_SRC_T;
-        PCH_WE = 1'b1;
         PCH_SRC = C_PCH_SRC_MEM;
+        PCL_WE = 1'b1;
+        PCH_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - ADH, ADL
-        ABL_WE = 1'b1;
+        // Address Bus (ADH, ADL)
         ABL_SRC = C_ABL_SRC_T;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_MEM;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T2_PLR_OP: begin
         // Execute S + 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_INC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
+
+        // Update Stack Pointer
+        REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
         // Processor Status Register
         P_SRC = C_P_SRC_NON; // NOT from ALU
 
-        // Update Stack Pointer
-        S_WE = 1'b1;
-        REG_SRC = C_REG_SRC_ALU;
-
-        // Address Bus (fetch data from the address at next cycle)
-        // - 0x01, S + 1
-        ABL_WE = 1'b1;
+        // Address Bus (0x01, S + 1)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T2_PHR_OP: begin
+        // Data Bus
         R_W = C_RW_W;
         if (op == C_OP_PHA)
           DB_OUT_SRC = C_DB_OUT_SRC_A;
@@ -903,154 +896,146 @@ module controller(
         DL_WE = 1'b1;
 
         // Execute S - 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_DEC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
+
+        // Update Stack Pointer
+        REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
         // Processor Status Register
         P_SRC = C_P_SRC_NON; // NOT from ALU
 
-        // Update Stack Pointer
-        S_WE = 1'b1;
-        REG_SRC = C_REG_SRC_ALU;
-
-        // Address Bus (fetch data from the address at next cycle)
-        // - 0x01, S + 1
-        ABL_WE = 1'b1;
+        // Address Bus (0x01, S + 1)
         ABL_SRC = C_ABL_SRC_PCC;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_PCC;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T2_RTI_OP: begin
         // Execute S + 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_INC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
+
+        // Update Stack Pointer
+        REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
         // Processor Status Register
         P_SRC = C_P_SRC_NON; // NOT from ALU
 
-        // Update Stack Pointer
-        S_WE = 1'b1;
-        REG_SRC = C_REG_SRC_ALU;
-
-        // Address Bus (fetch data from the address at next cycle)
-        // - 0x01, S + 1
-        ABL_WE = 1'b1;
+        // Address Bus (0x01, S + 1)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T3_RTI_OP: begin
         // Input Data Latch (P)
         DL_WE = 1'b1;
 
         // Execute S + 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_INC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
+
+        // Update Stack Pointer
+        REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
         // Processor Status Register
         P_SRC = C_P_SRC_MEM;
 
-        // Update Stack Pointer
-        S_WE = 1'b1;
-        REG_SRC = C_REG_SRC_ALU;
-
-        // Address Bus (fetch data from the address at next cycle)
-        // - 0x01, (S + 1) + 1
-        ABL_WE = 1'b1;
+        // Address Bus (0x01, (S + 1) + 1)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T4_RTI_OP: begin
         // Input Data Latch (PCL)
         DL_WE = 1'b1;
 
         // Execute S + 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_INC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
+
+        // Update Stack Pointer
+        REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
         // Processor Status Register
         P_SRC = C_P_SRC_NON; // NOT from ALU
 
-        // Update Stack Pointer
-        S_WE = 1'b1;
-        REG_SRC = C_REG_SRC_ALU;
-
         // Restore Program Counter
-        PCL_WE = 1'b1;
         PCL_SRC = C_PCL_SRC_MEM;
+        PCL_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - 0x01, ((S + 1) + 1) + 1
-        ABL_WE = 1'b1;
+        // Address Bus (0x01, ((S + 1) + 1) + 1)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T5_RTI_OP: begin
         // Input Data Latch (PCH)
         DL_WE = 1'b1;
 
         // Restore Program Counter
-        PCH_WE = 1'b1;
         PCH_SRC = C_PCH_SRC_MEM;
+        PCH_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - 0x01, (((S + 1) + 1) + 1) + 1
-        ABL_WE = 1'b1;
-        ABL_SRC = C_ABL_SRC_PCC; // MEM?
-        ABH_WE = 1'b1;
+        // Address Bus (0x01, (((S + 1) + 1) + 1) + 1)
+        ABL_SRC = C_ABL_SRC_PCC;
         ABH_SRC = C_ABH_SRC_MEM;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T2_RTS_OP: begin
         // Execute S + 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_INC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
+
+        // Update Stack Pointer
+        REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
         // Processor Status Register
         P_SRC = C_P_SRC_NON; // NOT from ALU
 
-        // Update Stack Pointer
-        S_WE = 1'b1;
-        REG_SRC = C_REG_SRC_ALU;
-
-        // Address Bus (fetch data from the address at next cycle)
-        // - 0x01, S + 1
-        ABL_WE = 1'b1;
+        // Address Bus (0x01, S + 1)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T3_RTS_OP: begin
         // Input Data Latch (PCL)
         DL_WE = 1'b1;
 
         // Execute (S + 1) + 1
-        ALU_SRC_A = C_ALU_SRC_A_S;
         ALU_CTRL = C_ALU_CTRL_INC;
+        ALU_SRC_A = C_ALU_SRC_A_S;
 
         // Processor Status Register
         P_SRC = C_P_SRC_NON; // NOT from ALU
 
         // Update Stack Pointer
-        S_WE = 1'b1;
         REG_SRC = C_REG_SRC_ALU;
+        S_WE = 1'b1;
 
         // Restore Program Counter
-        PCL_WE = 1'b1;
         PCL_SRC = C_PCL_SRC_MEM;
+        PCL_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - 0x01, (S + 1) + 1
-        ABL_WE = 1'b1;
+        // Address Bus (0x01, (S + 1) + 1)
         ABL_SRC = C_ABL_SRC_ALU;
+        ABL_WE = 1'b1;
       end
       C_STATE_T4_RTS_OP: begin
         // Input Data Latch (PCH)
         DL_WE = 1'b1;
 
         // Restore Program Counter
-        PCH_WE = 1'b1;
         PCH_SRC = C_PCH_SRC_MEM;
+        PCH_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - PCH, PCL
-        ABL_WE = 1'b1;
+        // Address Bus (PCH, PCL)
         ABL_SRC = C_ABL_SRC_PCN;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_PCN;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
       C_STATE_T5_RTS_OP: begin
         // Program Counter
@@ -1060,12 +1045,11 @@ module controller(
         PCL_WE = 1'b1;
         PCH_WE = 1'b1;
 
-        // Address Bus (fetch data from the address at next cycle)
-        // - PCH, PCL + 1
-        ABL_WE = 1'b1;
+        // Address Bus (PCH, PCL + 1)
         ABL_SRC = C_ABL_SRC_PCN;
-        ABH_WE = 1'b1;
         ABH_SRC = C_ABH_SRC_PCN;
+        ABL_WE = 1'b1;
+        ABH_WE = 1'b1;
       end
     endcase
   end

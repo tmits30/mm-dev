@@ -20,13 +20,13 @@ module mpu(
 
   // Program Counter Control
   wire [1:0] pcadder_ctrl;
-  wire [1:0] pcl_src; // dl / t / pcladd
-  wire [0:0] pch_src; // dl / pcladd
+  wire [1:0] pcl_src;
+  wire [0:0] pch_src;
   wire       pcl_we;
   wire       pch_we;
 
   // Registers Control
-  wire [2:0] reg_src; // dl / aluout
+  wire [2:0] reg_src;
   wire       a_we;
   wire       x_we;
   wire       y_we;
