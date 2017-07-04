@@ -117,45 +117,61 @@ module controller(
   wire [3:0] mov_src, mov_dst;
 
   assign mov_src = ((op == C_OP_TAX) | (op == C_OP_TAY)) ? C_REG_SRC_A :
-                  ((op == C_OP_TXA) | (op == C_OP_TXS)) ? C_REG_SRC_X :
-                  ((op == C_OP_TYA)) ? C_REG_SRC_Y :
-                  ((op == C_OP_TSX)) ? C_REG_SRC_S : C_REG_SRC_T;
+                   ((op == C_OP_TXA) | (op == C_OP_TXS)) ? C_REG_SRC_X :
+                   ((op == C_OP_TYA)) ? C_REG_SRC_Y :
+                   ((op == C_OP_TSX)) ? C_REG_SRC_S : C_REG_SRC_T;
 
   assign mov_dst = ((op == C_OP_TXA) | (op == C_OP_TYA) |
-                   (op == C_OP_LDA) | (op == C_OP_PLA)) ? C_REG_DST_A :
-                  ((op == C_OP_TAX) | (op == C_OP_TSX) |
-                   (op == C_OP_LDX)) ? C_REG_DST_X :
-                  ((op == C_OP_TAY) | (op == C_OP_LDY)) ? C_REG_DST_Y :
-                  ((op == C_OP_TXS)) ? C_REG_DST_S :
-                  ((op == C_OP_PLP)) ? C_REG_DST_P : C_REG_DST_T;
+                    (op == C_OP_LDA) | (op == C_OP_PLA)) ? C_REG_DST_A :
+                   ((op == C_OP_TAX) | (op == C_OP_TSX) |
+                    (op == C_OP_LDX)) ? C_REG_DST_X :
+                   ((op == C_OP_TAY) | (op == C_OP_LDY)) ? C_REG_DST_Y :
+                   ((op == C_OP_TXS)) ? C_REG_DST_S :
+                   ((op == C_OP_PLP)) ? C_REG_DST_P : C_REG_DST_T;
 
   //
   // ALU Execution
   //
   wire [3:0] exe_ctrl;
-  wire [2:0] exe_src_a_mem, exe_src_a;
+  wire [2:0] exe_src_a;
 
-  assign exe_src_a_mem = (addr_mode == C_ADDR_MODE_ACC) ? C_ALU_SRC_A_A : C_ALU_SRC_A_MEM;
+  assign {exe_ctrl, exe_src_a} = exe_signal(op, addr_mode);
 
-  assign {exe_ctrl, exe_src_a} = (op == C_OP_ADC) ? {C_ALU_CTRL_ADC, C_ALU_SRC_A_A} :
-                                 (op == C_OP_AND) ? {C_ALU_CTRL_AND, C_ALU_SRC_A_A} :
-                                 (op == C_OP_BIT) ? {C_ALU_CTRL_BIT, C_ALU_SRC_A_A} :
-                                 (op == C_OP_CMP) ? {C_ALU_CTRL_CMP, C_ALU_SRC_A_A} :
-                                 (op == C_OP_CPX) ? {C_ALU_CTRL_CMP, C_ALU_SRC_A_X} :
-                                 (op == C_OP_CPY) ? {C_ALU_CTRL_CMP, C_ALU_SRC_A_Y} :
-                                 (op == C_OP_DEC) ? {C_ALU_CTRL_DEC, C_ALU_SRC_A_T} :
-                                 (op == C_OP_DEX) ? {C_ALU_CTRL_DEC, C_ALU_SRC_A_X} :
-                                 (op == C_OP_DEY) ? {C_ALU_CTRL_DEC, C_ALU_SRC_A_Y} :
-                                 (op == C_OP_EOR) ? {C_ALU_CTRL_EOR, C_ALU_SRC_A_A} :
-                                 (op == C_OP_INC) ? {C_ALU_CTRL_INC, C_ALU_SRC_A_T} :
-                                 (op == C_OP_INX) ? {C_ALU_CTRL_INC, C_ALU_SRC_A_X} :
-                                 (op == C_OP_INY) ? {C_ALU_CTRL_INC, C_ALU_SRC_A_Y} :
-                                 (op == C_OP_ORA) ? {C_ALU_CTRL_ORA, C_ALU_SRC_A_A} :
-                                 (op == C_OP_SBC) ? {C_ALU_CTRL_SBC, C_ALU_SRC_A_A} :
-                                 (op == C_OP_ASL) ? {C_ALU_CTRL_ASL, exe_src_a_mem} :
-                                 (op == C_OP_LSR) ? {C_ALU_CTRL_LSR, exe_src_a_mem} :
-                                 (op == C_OP_ROL) ? {C_ALU_CTRL_ROL, exe_src_a_mem} :
-                                 (op == C_OP_ROR) ? {C_ALU_CTRL_ROR, exe_src_a_mem} : 7'b0;
+  function [6:0] exe_signal(input [5:0] op, input [3:0] addr_mode);
+    begin
+      if (addr_mode == C_ADDR_MODE_ACC)
+        case (op)
+          C_OP_ASL: exe_signal = {C_ALU_CTRL_ASL, C_ALU_SRC_A_A};
+          C_OP_LSR: exe_signal = {C_ALU_CTRL_LSR, C_ALU_SRC_A_A};
+          C_OP_ROL: exe_signal = {C_ALU_CTRL_ROL, C_ALU_SRC_A_A};
+          C_OP_ROR: exe_signal = {C_ALU_CTRL_ROR, C_ALU_SRC_A_A};
+          default: 7'b0;
+        endcase
+      else
+        case (op)
+          C_OP_ADC: exe_signal = {C_ALU_CTRL_ADC, C_ALU_SRC_A_A};
+          C_OP_AND: exe_signal = {C_ALU_CTRL_AND, C_ALU_SRC_A_A};
+          C_OP_BIT: exe_signal = {C_ALU_CTRL_BIT, C_ALU_SRC_A_A};
+          C_OP_CMP: exe_signal = {C_ALU_CTRL_CMP, C_ALU_SRC_A_A};
+          C_OP_CPX: exe_signal = {C_ALU_CTRL_CMP, C_ALU_SRC_A_X};
+          C_OP_CPY: exe_signal = {C_ALU_CTRL_CMP, C_ALU_SRC_A_Y};
+          C_OP_DEC: exe_signal = {C_ALU_CTRL_DEC, C_ALU_SRC_A_T};
+          C_OP_DEX: exe_signal = {C_ALU_CTRL_DEC, C_ALU_SRC_A_X};
+          C_OP_DEY: exe_signal = {C_ALU_CTRL_DEC, C_ALU_SRC_A_Y};
+          C_OP_EOR: exe_signal = {C_ALU_CTRL_EOR, C_ALU_SRC_A_A};
+          C_OP_INC: exe_signal = {C_ALU_CTRL_INC, C_ALU_SRC_A_T};
+          C_OP_INX: exe_signal = {C_ALU_CTRL_INC, C_ALU_SRC_A_X};
+          C_OP_INY: exe_signal = {C_ALU_CTRL_INC, C_ALU_SRC_A_Y};
+          C_OP_ORA: exe_signal = {C_ALU_CTRL_ORA, C_ALU_SRC_A_A};
+          C_OP_SBC: exe_signal = {C_ALU_CTRL_SBC, C_ALU_SRC_A_A};
+          C_OP_ASL: exe_signal = {C_ALU_CTRL_ASL, C_ALU_SRC_A_MEM};
+          C_OP_LSR: exe_signal = {C_ALU_CTRL_LSR, C_ALU_SRC_A_MEM};
+          C_OP_ROL: exe_signal = {C_ALU_CTRL_ROL, C_ALU_SRC_A_MEM};
+          C_OP_ROR: exe_signal = {C_ALU_CTRL_ROR, C_ALU_SRC_A_MEM};
+          default: 7'b0;
+        endcase
+    end
+  endfunction
 
   //
   // Current/Next State
