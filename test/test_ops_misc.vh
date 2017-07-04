@@ -15,6 +15,10 @@ task test_misc_JSR;
     mem.ram[16'h4467] <= T_PCL; // 1st operand ADL
     mem.ram[16'h4468] <= T_PCH; // 2nd operand ADH
     mem.ram[16'h4469] <= 8'hea; // NOP
+    mpu.datapath.pcl_reg.Q <= 8'h66;
+    mpu.datapath.pch_reg.Q <= 8'h44;
+    mpu.datapath.abl_reg.Q <= 8'h66;
+    mpu.datapath.abh_reg.Q <= 8'h44;
     reset_and_run;
     $display("JSR %s: 0x%02x (0x%02x) 0x%02x (0x%02x) 0x%02x (0x%02x) 0x%02x (0x%02x) 0x%02x (0x%02x)",
              (mem.ram[SP_INIT-0] == T_SP0 &&
@@ -45,6 +49,10 @@ task test_misc_BRK;
     mem.ram[16'h4467] <= 8'hea; // NOP
     mem.ram[16'hfffe] <= T_PCL; // 1st operand ADL
     mem.ram[16'hffff] <= T_PCH; // 2nd operand ADH
+    mpu.datapath.pcl_reg.Q <= 8'h66;
+    mpu.datapath.pch_reg.Q <= 8'h44;
+    mpu.datapath.abl_reg.Q <= 8'h66;
+    mpu.datapath.abh_reg.Q <= 8'h44;
     reset_and_run;
     $display("BRK %s: 0x%02x (0x%02x) 0x%02x (0x%02x) 0x%02x (0x%02x) 0x%02x (0x%02x) 0x%02x (0x%02x) 0x%02x (0x%02x)",
              (mem.ram[SP_INIT-0] == T_SP0 &&
@@ -74,6 +82,7 @@ task test_misc_RTI;
     mem.ram[16'h01fb] <= T_P;
     mem.ram[16'h01fc] <= T_PCL;
     mem.ram[16'h01fd] <= T_PCH;
+    mpu.datapath.s_reg.Q <= 8'hfa;
     reset_and_run;
     $display("RTI %s: 0x%02x (0x%02x) 0x%02x (0x%02x) 0x%02x (0x%02x) 0x%02x (0x%02x)",
              (mpu.datapath.s == T_S &&
@@ -97,6 +106,7 @@ task test_misc_RTS;
     mem.ram[16'h01fb] <= T_PCL;
     mem.ram[16'h01fc] <= T_PCH;
     mem.ram[16'h2256] <= 8'hea;
+    mpu.datapath.s_reg.Q <= 8'hfa;
     reset_and_run;
     $display("RTS %s: 0x%02x (0x%02x) 0x%02x (0x%02x) 0x%02x (0x%02x)",
              (mpu.datapath.s == T_S &&
@@ -155,6 +165,7 @@ task test_misc_BCC_t1;
     mem.ram[16'h0001] <= 8'h53;
     mem.ram[16'h0002] <= 8'hea;
     mem.ram[16'h0055] <= 8'hea;
+    mpu.datapath.p_reg.Q <= 8'h01;
     reset_and_run;
     $display("BCC(T1) %s: 0x%02x (0x%02x) 0x%02x (0x%02x)",
              (mpu.datapath.pcl == T_PCL+2 &&
@@ -189,8 +200,10 @@ task test_misc_BCC_t3;
     mem.ram[16'h0040] <= 8'h90;
     mem.ram[16'h0041] <= 8'he0;
     mem.ram[16'h0122] <= 8'hea;
+    mpu.datapath.pcl_reg.Q <= 8'h40;
+    mpu.datapath.abl_reg.Q <= 8'h40;
     reset_and_run;
-    $display("BCC(T2) %s: 0x%02x (0x%02x) 0x%02x (0x%02x)",
+    $display("BCC(T3) %s: 0x%02x (0x%02x) 0x%02x (0x%02x)",
              (mpu.datapath.pcl == T_PCL+2 &&
               mpu.datapath.pch == T_PCH) ? "Success" : "Fail",
              mpu.datapath.pcl, T_PCL+2,
