@@ -575,9 +575,6 @@ module controller(
         ABH_WE = 1'b1;
       end
       C_STATE_T5_JSR_OP: begin
-        // Input Data Latch (ADH)
-        DL_WE = 1'b1;
-
         // Program Counter
         PCL_SRC = C_PCL_SRC_T;
         PCH_SRC = C_PCH_SRC_MEM;
@@ -620,9 +617,6 @@ module controller(
         ABH_WE = 1'b1;
       end
       C_STATE_T2_IND_AM: begin
-        // Input Data Latch (IAH)
-        DL_WE = 1'b1;
-
         // Program Counter
         PCADDER_CTRL = C_PCADDER_CTRL_INC;
         PCL_SRC = C_PCL_SRC_ADD;
@@ -637,9 +631,6 @@ module controller(
         ABH_WE = 1'b1;
       end
       C_STATE_T3_IND_AM: begin
-        // Input Data Latch (ADL)
-        DL_WE = 1'b1;
-
         // Execute IAL + 1
         ALU_CTRL = C_ALU_CTRL_INC;
         ALU_SRC_A = C_ALU_SRC_A_T;
@@ -653,9 +644,6 @@ module controller(
         ABL_WE = 1'b1;
       end
       C_STATE_T4_IND_AM: begin
-        // Input Data Latch (ADH)
-        DL_WE = 1'b1;
-
         // Program Counter
         PCL_SRC = C_PCL_SRC_T;
         PCH_SRC = C_PCH_SRC_MEM;
@@ -683,9 +671,6 @@ module controller(
         ABL_WE = 1'b1;
       end
       C_STATE_T3_INX_AM: begin
-        // Input Data Latch (ADL)
-        DL_WE = 1'b1;
-
         // Execute (BAL + X) + 1
         ALU_CTRL = C_ALU_CTRL_INC;
         ALU_SRC_A = C_ALU_SRC_A_T;
@@ -709,9 +694,6 @@ module controller(
         ABH_WE = 1'b1;
       end
       C_STATE_T2_INY_AM: begin
-        // Input Data Latch (BAL)
-        DL_WE = 1'b1;
-
         // Execute IAL + 1
         ALU_CTRL = C_ALU_CTRL_INC;
         ALU_SRC_A = C_ALU_SRC_A_T;
@@ -839,9 +821,6 @@ module controller(
         ABH_WE = 1'b1;
       end
       C_STATE_T5_BRK_OP: begin
-        // Input Data latch (ADL)
-        DL_WE = 1'b1;
-
         // Temporary Register (ADL)
         REG_SRC = C_REG_SRC_MEM;
         T_WE = 1'b1;
@@ -853,9 +832,6 @@ module controller(
         ABH_WE = 1'b1;
       end
       C_STATE_T6_BRK_OP: begin
-        // Input Data latch (ADH)
-        DL_WE = 1'b1;
-
         // Program Counter
         PCL_SRC = C_PCL_SRC_T;
         PCH_SRC = C_PCH_SRC_MEM;
@@ -892,9 +868,6 @@ module controller(
         else
           DB_OUT_SRC = C_DB_OUT_SRC_P;
 
-        // Input Data latch
-        DL_WE = 1'b1;
-
         // Execute S - 1
         ALU_CTRL = C_ALU_CTRL_DEC;
         ALU_SRC_A = C_ALU_SRC_A_S;
@@ -929,9 +902,6 @@ module controller(
         ABL_WE = 1'b1;
       end
       C_STATE_T3_RTI_OP: begin
-        // Input Data Latch (P)
-        DL_WE = 1'b1;
-
         // Execute S + 1
         ALU_CTRL = C_ALU_CTRL_INC;
         ALU_SRC_A = C_ALU_SRC_A_S;
@@ -948,9 +918,6 @@ module controller(
         ABL_WE = 1'b1;
       end
       C_STATE_T4_RTI_OP: begin
-        // Input Data Latch (PCL)
-        DL_WE = 1'b1;
-
         // Execute S + 1
         ALU_CTRL = C_ALU_CTRL_INC;
         ALU_SRC_A = C_ALU_SRC_A_S;
@@ -971,9 +938,6 @@ module controller(
         ABL_WE = 1'b1;
       end
       C_STATE_T5_RTI_OP: begin
-        // Input Data Latch (PCH)
-        DL_WE = 1'b1;
-
         // Restore Program Counter
         PCH_SRC = C_PCH_SRC_MEM;
         PCH_WE = 1'b1;
@@ -1001,9 +965,6 @@ module controller(
         ABL_WE = 1'b1;
       end
       C_STATE_T3_RTS_OP: begin
-        // Input Data Latch (PCL)
-        DL_WE = 1'b1;
-
         // Execute (S + 1) + 1
         ALU_CTRL = C_ALU_CTRL_INC;
         ALU_SRC_A = C_ALU_SRC_A_S;
@@ -1024,9 +985,6 @@ module controller(
         ABL_WE = 1'b1;
       end
       C_STATE_T4_RTS_OP: begin
-        // Input Data Latch (PCH)
-        DL_WE = 1'b1;
-
         // Restore Program Counter
         PCH_SRC = C_PCH_SRC_MEM;
         PCH_WE = 1'b1;
