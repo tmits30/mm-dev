@@ -63,46 +63,202 @@ module datapath #(
   wire [7:0] alu_src_a, alu_src_b, alu_out;
 
   // Instruction Register
-  flopenr #(8'h00) ir_reg(.CLK(CLK), .RES_N(RES_N), .WE(IR_WE), .D(DB_IN), .Q(INSTR));
+  flopenr #(8'h00) ir_reg(
+    .CLK   (CLK),
+    .RES_N (RES_N),
+    .WE    (IR_WE),
+    .D     (DB_IN),
+    .Q     (INSTR)
+  );
 
   // Program Counter
-  pcadder pcadder(.RES_N(res_n), .IL(pcl), .IH(pch), .SRC(DB_IN), .CTRL(PCADDER_CTRL), .OL(pcl_add), .OH(pch_add));
+  pcadder pcadder(
+    .RES_N (res_n),
+    .IL    (pcl),
+    .IH    (pch),
+    .SRC   (DB_IN),
+    .CTRL  (PCADDER_CTRL),
+    .OL    (pcl_add),
+    .OH    (pch_add)
+  );
 
-  mux4 pcl_mux(.D0(pcl_add), .D1(DB_IN), .D2(t), .S(PCL_SRC), .Y(pcl_wd));
-  mux2 pch_mux(.D0(pch_add), .D1(DB_IN), .S(PCH_SRC), .Y(pch_wd));
+  mux4 pcl_mux(
+    .D0 (pcl_add),
+    .D1 (DB_IN),
+    .D2 (t),
+    .S  (PCL_SRC),
+    .Y  (pcl_wd)
+  );
+  mux2 pch_mux(
+    .D0 (pch_add),
+    .D1 (DB_IN),
+    .S  (PCH_SRC),
+    .Y  (pch_wd)
+  );
 
-  flopenr #(P_PCL_INIT) pcl_reg(.CLK(CLK), .RES_N(RES_N), .WE(PCL_WE), .D(pcl_wd), .Q(pcl));
-  flopenr #(P_PCH_INIT) pch_reg(.CLK(CLK), .RES_N(RES_N), .WE(PCH_WE), .D(pch_wd), .Q(pch));
+  flopenr #(P_PCL_INIT) pcl_reg(
+    .CLK   (CLK),
+    .RES_N (RES_N),
+    .WE    (PCL_WE),
+    .D     (pcl_wd),
+    .Q     (pcl)
+  );
+  flopenr #(P_PCH_INIT) pch_reg(
+    .CLK   (CLK),
+    .RES_N (RES_N),
+    .WE    (PCH_WE),
+    .D     (pch_wd),
+    .Q     (pch)
+  );
 
   // Registers
-  mux8 reg_mux(.D0(a), .D1(x), .D2(y), .D3(s), .D4(t), .D5(p), .D6(DB_IN), .D7(alu_out), .S(REG_SRC), .Y(reg_wd));
+  mux8 reg_mux(
+    .D0 (a),
+    .D1 (x),
+    .D2 (y),
+    .D3 (s),
+    .D4 (t),
+    .D5 (p),
+    .D6 (DB_IN),
+    .D7 (alu_out),
+    .S  (REG_SRC),
+    .Y  (reg_wd)
+  );
 
-  flopenr #(P_A_INIT) a_reg(.CLK(CLK), .RES_N(RES_N), .WE(A_WE), .D(reg_wd), .Q(a));
-  flopenr #(P_X_INIT) x_reg(.CLK(CLK), .RES_N(RES_N), .WE(X_WE), .D(reg_wd), .Q(x));
-  flopenr #(P_Y_INIT) y_reg(.CLK(CLK), .RES_N(RES_N), .WE(Y_WE), .D(reg_wd), .Q(y));
-  flopenr #(P_S_INIT) s_reg(.CLK(CLK), .RES_N(RES_N), .WE(S_WE), .D(reg_wd), .Q(s));
-  flopenr #(8'h00) t_reg(.CLK(CLK), .RES_N(RES_N), .WE(T_WE), .D(reg_wd), .Q(t));
+  flopenr #(P_A_INIT) a_reg(
+    .CLK   (CLK),
+    .RES_N (RES_N),
+    .WE    (A_WE),
+    .D     (reg_wd),
+    .Q     (a)
+  );
+  flopenr #(P_X_INIT) x_reg(
+    .CLK   (CLK),
+    .RES_N (RES_N),
+    .WE    (X_WE),
+    .D     (reg_wd),
+    .Q     (x)
+  );
+  flopenr #(P_Y_INIT) y_reg(
+    .CLK   (CLK),
+    .RES_N (RES_N),
+    .WE    (Y_WE),
+    .D     (reg_wd),
+    .Q     (y)
+  );
+  flopenr #(P_S_INIT) s_reg(
+    .CLK   (CLK),
+    .RES_N (RES_N),
+    .WE    (S_WE),
+    .D     (reg_wd),
+    .Q     (s)
+  );
+  flopenr #(8'h00) t_reg(
+    .CLK   (CLK),
+    .RES_N (RES_N),
+    .WE    (T_WE),
+    .D     (reg_wd),
+    .Q     (t)
+  );
 
   // Processor Status Register
-  mux8 p_mux(.D0(t), .D1(DB_IN), .D2(p_alu), .D3(p | P_MASK), .D4(p & ~P_MASK), .D5(p), .S(P_SRC), .Y(p_wd));
+  mux8 p_mux(
+    .D0 (t),
+    .D1 (DB_IN),
+    .D2 (p_alu),
+    .D3 (p | P_MASK),
+    .D4 (p & ~P_MASK),
+    .D5 (p),
+    .S  (P_SRC),
+    .Y  (p_wd)
+  );
 
-  flopenr #(P_P_INIT) p_reg(.CLK(CLK), .RES_N(RES_N), .WE(1'b1), .D(p_wd), .Q(p));
+  flopenr #(P_P_INIT) p_reg(
+    .CLK   (CLK),
+    .RES_N (RES_N),
+    .WE    (1'b1),
+    .D     (p_wd),
+    .Q     (p)
+  );
 
   // ALU
-  mux8 alu_src_a_mux(.D0(a), .D1(x), .D2(y), .D3(s), .D4(t), .S(ALU_SRC_A), .Y(alu_src_a));
-  mux2 alu_src_b_mux(.D0(t), .D1(8'h00), .S(ALU_SRC_B), .Y(alu_src_b));
+  mux8 alu_src_a_mux(
+    .D0 (a),
+    .D1 (x),
+    .D2 (y),
+    .D3 (s),
+    .D4 (t),
+    .S  (ALU_SRC_A),
+    .Y  (alu_src_a)
+  );
+  mux2 alu_src_b_mux(
+    .D0 (t),
+    .D1 (8'h00),
+    .S  (ALU_SRC_B),
+    .Y  (alu_src_b)
+  );
 
-  alu alu(.A(alu_src_a), .B(alu_src_b), .FLAG_IN(p), .CTRL(ALU_CTRL), .OUT(alu_out), .FLAG_OUT(p_alu));
+  alu alu(
+    .A        (alu_src_a),
+    .B        (alu_src_b),
+    .FLAG_IN  (p),
+    .CTRL     (ALU_CTRL),
+    .OUT      (alu_out),
+    .FLAG_OUT (p_alu)
+  );
 
   // Address Bus
-  mux8 abl_mux(.D0(pcl_wd), .D1(pcl), .D2(DB_IN), .D3(alu_out), .D4(s), .D5(t), .D6(8'hfe), .D7(8'hff), .S(ABL_SRC), .Y(abl_wd));
-  mux8 abh_mux(.D0(pch_wd), .D1(pch), .D2(DB_IN), .D3(alu_out), .D4(8'h00), .D5(8'h01), .D6(8'hff), .S(ABH_SRC), .Y(abh_wd));
+  mux8 abl_mux(
+    .D0 (pcl_wd),
+    .D1 (pcl),
+    .D2 (DB_IN),
+    .D3 (alu_out),
+    .D4 (s),
+    .D5 (t),
+    .D6 (8'hfe),
+    .D7 (8'hff),
+    .S  (ABL_SRC),
+    .Y  (abl_wd)
+  );
+  mux8 abh_mux(
+    .D0 (pch_wd),
+    .D1 (pch),
+    .D2 (DB_IN),
+    .D3 (alu_out),
+    .D4 (8'h00),
+    .D5 (8'h01),
+    .D6 (8'hff),
+    .S  (ABH_SRC),
+    .Y  (abh_wd)
+  );
 
-  flopenr #(P_ABL_INIT) abl_reg(.CLK(CLK), .RES_N(RES_N), .WE(ABL_WE), .D(abl_wd), .Q(ABL));
-  flopenr #(P_ABH_INIT) abh_reg(.CLK(CLK), .RES_N(RES_N), .WE(ABH_WE), .D(abh_wd), .Q(ABH));
+  flopenr #(P_ABL_INIT) abl_reg(
+    .CLK   (CLK),
+    .RES_N (RES_N),
+    .WE    (ABL_WE),
+    .D     (abl_wd),
+    .Q     (ABL)
+  );
+  flopenr #(P_ABH_INIT) abh_reg(
+    .CLK   (CLK),
+    .RES_N (RES_N),
+    .WE    (ABH_WE),
+    .D     (abh_wd),
+    .Q     (ABH)
+  );
 
   // Data Bus
-  mux8 db_mux(.D0(a), .D1(x), .D2(y), .D3(t), .D4(p), .D5(pcl), .D6(pch), .S(DB_OUT_SRC), .Y(DB_OUT));
+  mux8 db_mux(
+    .D0 (a),
+    .D1 (x),
+    .D2 (y),
+    .D3 (t),
+    .D4 (p),
+    .D5 (pcl),
+    .D6 (pch),
+    .S  (DB_OUT_SRC),
+    .Y  (DB_OUT)
+  );
 
   assign FLAG = (pcadder.carry << 8) | p;
 
