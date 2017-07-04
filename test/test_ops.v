@@ -59,6 +59,7 @@ module test_ops();
 `include "test_ops_rmw.vh"
 `include "test_ops_phr.vh"
 `include "test_ops_plr.vh"
+`include "test_ops_misc.vh"
 
   initial begin
     test_sbi; // Test for Single Byte Instructions
@@ -67,6 +68,7 @@ module test_ops();
     test_rmw; // Test for Store Operations
     test_phr; // Test for Push Operations
     test_plr; // Test for Pull Operations
+    test_misc; // Test for Misc
     $finish;
   end
 
