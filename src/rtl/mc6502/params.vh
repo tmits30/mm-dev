@@ -182,11 +182,9 @@ localparam C_ALU_SRC_A_X   = 3'h1;
 localparam C_ALU_SRC_A_Y   = 3'h2;
 localparam C_ALU_SRC_A_S   = 3'h3;
 localparam C_ALU_SRC_A_T   = 3'h4;
-localparam C_ALU_SRC_A_MEM = 3'h5;
 
-localparam C_ALU_SRC_B_MEM = 2'h0;
-localparam C_ALU_SRC_B_T   = 2'h1;
-localparam C_ALU_SRC_B_H00 = 2'h2;
+localparam C_ALU_SRC_B_T   = 1'h0;
+localparam C_ALU_SRC_B_H00 = 1'h1;
 
 localparam C_ABL_SRC_PCN = 3'h0; // Next Program Counter Low
 localparam C_ABL_SRC_PCC = 3'h1; // Current Program Counter Low

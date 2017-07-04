@@ -12,9 +12,6 @@ module controller(
   // Data Bus (Output Reg) Control
   output reg [2:0] DB_OUT_SRC,
 
-  // Data Latch Control
-  output reg       DL_WE,
-
   // Instruction Register Control
   output reg       IR_WE,
 
@@ -40,7 +37,7 @@ module controller(
   // ALU Control
   output reg [3:0] ALU_CTRL,
   output reg [2:0] ALU_SRC_A,
-  output reg [1:0] ALU_SRC_B,
+  output reg [0:0] ALU_SRC_B,
 
   // Address Bus Control
   output reg [2:0] ABL_SRC,
@@ -147,7 +144,7 @@ module controller(
           C_OP_LSR: exe_signal = {C_ALU_CTRL_LSR, C_ALU_SRC_A_A};
           C_OP_ROL: exe_signal = {C_ALU_CTRL_ROL, C_ALU_SRC_A_A};
           C_OP_ROR: exe_signal = {C_ALU_CTRL_ROR, C_ALU_SRC_A_A};
-          default: 7'b0;
+          default:  exe_signal = 7'b0;
         endcase
       else
         case (op)
@@ -157,20 +154,20 @@ module controller(
           C_OP_CMP: exe_signal = {C_ALU_CTRL_CMP, C_ALU_SRC_A_A};
           C_OP_CPX: exe_signal = {C_ALU_CTRL_CMP, C_ALU_SRC_A_X};
           C_OP_CPY: exe_signal = {C_ALU_CTRL_CMP, C_ALU_SRC_A_Y};
-          C_OP_DEC: exe_signal = {C_ALU_CTRL_DEC, C_ALU_SRC_A_T};
           C_OP_DEX: exe_signal = {C_ALU_CTRL_DEC, C_ALU_SRC_A_X};
           C_OP_DEY: exe_signal = {C_ALU_CTRL_DEC, C_ALU_SRC_A_Y};
           C_OP_EOR: exe_signal = {C_ALU_CTRL_EOR, C_ALU_SRC_A_A};
-          C_OP_INC: exe_signal = {C_ALU_CTRL_INC, C_ALU_SRC_A_T};
           C_OP_INX: exe_signal = {C_ALU_CTRL_INC, C_ALU_SRC_A_X};
           C_OP_INY: exe_signal = {C_ALU_CTRL_INC, C_ALU_SRC_A_Y};
           C_OP_ORA: exe_signal = {C_ALU_CTRL_ORA, C_ALU_SRC_A_A};
           C_OP_SBC: exe_signal = {C_ALU_CTRL_SBC, C_ALU_SRC_A_A};
-          C_OP_ASL: exe_signal = {C_ALU_CTRL_ASL, C_ALU_SRC_A_MEM};
-          C_OP_LSR: exe_signal = {C_ALU_CTRL_LSR, C_ALU_SRC_A_MEM};
-          C_OP_ROL: exe_signal = {C_ALU_CTRL_ROL, C_ALU_SRC_A_MEM};
-          C_OP_ROR: exe_signal = {C_ALU_CTRL_ROR, C_ALU_SRC_A_MEM};
-          default: 7'b0;
+          C_OP_DEC: exe_signal = {C_ALU_CTRL_DEC, C_ALU_SRC_A_T};
+          C_OP_INC: exe_signal = {C_ALU_CTRL_INC, C_ALU_SRC_A_T};
+          C_OP_ASL: exe_signal = {C_ALU_CTRL_ASL, C_ALU_SRC_A_T};
+          C_OP_LSR: exe_signal = {C_ALU_CTRL_LSR, C_ALU_SRC_A_T};
+          C_OP_ROL: exe_signal = {C_ALU_CTRL_ROL, C_ALU_SRC_A_T};
+          C_OP_ROR: exe_signal = {C_ALU_CTRL_ROR, C_ALU_SRC_A_T};
+          default:  exe_signal = 7'b0;
         endcase
     end
   endfunction
@@ -304,9 +301,6 @@ module controller(
     R_W = C_RW_R;
     DB_OUT_SRC = C_DB_OUT_SRC_A;
 
-    // Input Data Latch
-    DL_WE = 1'b0;
-
     // Instruction Register
     IR_WE = 1'b0;
 
@@ -348,7 +342,6 @@ module controller(
         // Execute
         ALU_CTRL = exe_ctrl;
         ALU_SRC_A = exe_src_a;
-        ALU_SRC_B = C_ALU_SRC_B_T;
 
         if (is_txr_op | is_ldr_op | is_plr_op) begin
           REG_SRC = mov_src;
@@ -389,9 +382,6 @@ module controller(
         ABH_WE = 1'b1;
       end
       C_STATE_T1_R_OPER: begin
-        // Input Data latch
-        DL_WE = 1'b1;
-
         // Temporary Reigister
         REG_SRC = C_REG_SRC_MEM;
         T_WE = 1'b1;
@@ -430,9 +420,6 @@ module controller(
         ABH_WE = 1'b1;
       end
       C_STATE_TX_R_DATB: begin
-        // Input Data latch
-        DL_WE = 1'b1;
-
         // Execute ADH + C
         ALU_CTRL = C_ALU_CTRL_ADC;
         ALU_SRC_A = C_ALU_SRC_A_T;
@@ -459,9 +446,6 @@ module controller(
         end
       end
       C_STATE_TX_R_DATA: begin
-        // Input Data latch
-        DL_WE = 1'b1;
-
         // Temporary Register
         REG_SRC = C_REG_SRC_MEM;
         T_WE = 1'b1;
@@ -481,7 +465,6 @@ module controller(
         // Execute
         ALU_CTRL = exe_ctrl;
         ALU_SRC_A = exe_src_a;
-        ALU_SRC_B = C_ALU_SRC_B_T;
 
         // Temporary Register
         REG_SRC = C_REG_SRC_ALU;
@@ -506,9 +489,6 @@ module controller(
         ABH_WE = 1'b1;
       end
       C_STATE_T2_ABS_AM: begin
-        // Input Data Latch (ADH)
-        DL_WE = 1'b1;
-
         // Program Counter
         if (op == C_OP_JSR)
           PCADDER_CTRL = C_PCADDER_CTRL_NOP;
@@ -588,16 +568,12 @@ module controller(
         ABH_WE = 1'b1;
       end
       C_STATE_T2_ABR_AM: begin
-        // Input Data Latch (BAH)
-        DL_WE = 1'b1;
-
         // Execute BAL + index register
         ALU_CTRL = C_ALU_CTRL_ADC;
         if (addr_mode == C_ADDR_MODE_ABX)
           ALU_SRC_A = C_ALU_SRC_A_X;
         else
           ALU_SRC_A = C_ALU_SRC_A_Y;
-        ALU_SRC_B = C_ALU_SRC_B_T;
 
         // Temporary Register (BAH) for C_STATE_TX_R_DATB
         REG_SRC = C_REG_SRC_MEM;
@@ -660,7 +636,6 @@ module controller(
         // Execute BAL + X
         ALU_CTRL = C_ALU_CTRL_ADC;
         ALU_SRC_A = C_ALU_SRC_A_X;
-        ALU_SRC_B = C_ALU_SRC_B_MEM;
 
         // Temporary Register (BAL + X)
         REG_SRC = C_REG_SRC_ALU;
@@ -684,9 +659,6 @@ module controller(
         ABL_WE = 1'b1;
       end
       C_STATE_T4_INX_AM: begin
-        // Input Data Latch (ADH)
-        DL_WE = 1'b1;
-
         // Address Bus (ADH, ADL)
         ABL_SRC = C_ABL_SRC_T;
         ABH_SRC = C_ABH_SRC_MEM;
@@ -707,13 +679,9 @@ module controller(
         ABL_WE = 1'b1;
       end
       C_STATE_T3_INY_AM: begin
-        // Input Data Latch (BAH)
-        DL_WE = 1'b1;
-
         // Execute BAL + Y
         ALU_CTRL = C_ALU_CTRL_ADC;
         ALU_SRC_A = C_ALU_SRC_A_Y;
-        ALU_SRC_B = C_ALU_SRC_B_T;
 
         // Temporary Register (BAH) for C_STATE_TX_F_DATB
         REG_SRC = C_REG_SRC_MEM;
@@ -748,7 +716,6 @@ module controller(
           ALU_SRC_A = C_ALU_SRC_A_X;
         else
           ALU_SRC_A = C_ALU_SRC_A_Y;
-        ALU_SRC_B = C_ALU_SRC_B_MEM;
 
         // Address Bus (ADH, ADL)
         ABL_SRC = C_ABL_SRC_ALU;
@@ -969,12 +936,12 @@ module controller(
         ALU_CTRL = C_ALU_CTRL_INC;
         ALU_SRC_A = C_ALU_SRC_A_S;
 
-        // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
-
         // Update Stack Pointer
         REG_SRC = C_REG_SRC_ALU;
         S_WE = 1'b1;
+
+        // Processor Status Register
+        P_SRC = C_P_SRC_NON; // NOT from ALU
 
         // Restore Program Counter
         PCL_SRC = C_PCL_SRC_MEM;

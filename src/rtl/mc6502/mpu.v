@@ -12,9 +12,6 @@ module mpu(
   // Data Bus (Output) Control
   wire [2:0] db_out_src;
 
-  // Data Latch Control
-  wire       dl_we;
-
   // Instruction Register Control
   wire       ir_we;
 
@@ -37,20 +34,19 @@ module mpu(
   wire [2:0] p_src;
   wire [7:0] p_mask;
 
-  wire [7:0] instr;
-  wire [8:0] flag;
-
   // ALU Control
   wire [3:0] alu_ctrl;
   wire [2:0] alu_src_a;
-  wire [1:0] alu_src_b;
-  wire       alu_flag_we;
+  wire [0:0] alu_src_b;
 
   // Address Bus Control
   wire [2:0] abl_src;
   wire [2:0] abh_src;
   wire       abl_we;
   wire       abh_we;
+
+  wire [7:0] instr;
+  wire [8:0] flag;
 
   controller controller(
     .CLK          (CLK),
@@ -60,7 +56,6 @@ module mpu(
     .FLAG         (flag),
     .R_W          (R_W),
     .DB_OUT_SRC   (db_out_src),
-    .DL_WE        (dl_we),
     .IR_WE        (ir_we),
     .PCADDER_CTRL (pcadder_ctrl),
     .PCL_SRC      (pcl_src),
@@ -89,7 +84,6 @@ module mpu(
     .RES_N        (RES_N),
     .DB_IN        (DB_IN),
     .DB_OUT_SRC   (db_out_src),
-    .DL_WE        (dl_we),
     .IR_WE        (ir_we),
     .PCADDER_CTRL (pcadder_ctrl),
     .PCL_SRC      (pcl_src),

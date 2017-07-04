@@ -16,9 +16,6 @@ module datapath #(
   // Data Bus (Output) Control
   input [2:0]  DB_OUT_SRC,
 
-  // Data Latch Control
-  input        DL_WE,
-
   // Instruction Register Control
   input        IR_WE,
 
@@ -44,7 +41,7 @@ module datapath #(
   // ALU Control
   input [3:0]  ALU_CTRL,
   input [2:0]  ALU_SRC_A,
-  input [1:0]  ALU_SRC_B,
+  input [0:0]  ALU_SRC_B,
 
   // Address Bus Control
   input [2:0]  ABL_SRC,
@@ -61,15 +58,12 @@ module datapath #(
 
 `include "params.vh"
 
-  wire [7:0] dl, a, x, y, s, t, p, pcl, pch;
+  wire [7:0] a, x, y, s, t, p, pcl, pch;
   wire [7:0] pcl_add, pch_add, pcl_wd, pch_wd, reg_wd, p_alu, p_wd, abl_wd, abh_wd;
   wire [7:0] alu_src_a, alu_src_b, alu_out;
 
   // Instruction Register
   flopenr #(8'h00) ir_reg(.CLK(CLK), .RES_N(RES_N), .WE(IR_WE), .D(DB_IN), .Q(INSTR));
-
-  // Data Latch
-  flopenr #(8'h00) dl_reg(.CLK(CLK), .RES_N(RES_N), .WE(DL_WE), .D(DB_IN), .Q(dl));
 
   // Program Counter
   pcadder pcadder(.RES_N(res_n), .IL(pcl), .IH(pch), .SRC(DB_IN), .CTRL(PCADDER_CTRL), .OL(pcl_add), .OH(pch_add));
@@ -95,8 +89,8 @@ module datapath #(
   flopenr #(P_P_INIT) p_reg(.CLK(CLK), .RES_N(RES_N), .WE(1'b1), .D(p_wd), .Q(p));
 
   // ALU
-  mux8 alu_src_a_mux(.D0(a), .D1(x), .D2(y), .D3(s), .D4(t), .D5(dl), .S(ALU_SRC_A), .Y(alu_src_a));
-  mux4 alu_src_b_mux(.D0(dl), .D1(t), .D2(8'h00), .S(ALU_SRC_B), .Y(alu_src_b));
+  mux8 alu_src_a_mux(.D0(a), .D1(x), .D2(y), .D3(s), .D4(t), .S(ALU_SRC_A), .Y(alu_src_a));
+  mux2 alu_src_b_mux(.D0(t), .D1(8'h00), .S(ALU_SRC_B), .Y(alu_src_b));
 
   alu alu(.A(alu_src_a), .B(alu_src_b), .FLAG_IN(p), .CTRL(ALU_CTRL), .OUT(alu_out), .FLAG_OUT(p_alu));
 
