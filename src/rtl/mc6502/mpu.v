@@ -1,3 +1,5 @@
+/* verilator lint_off UNOPTFLAT */
+
 module mpu(
   input        CLK,
   input        RES_N,
