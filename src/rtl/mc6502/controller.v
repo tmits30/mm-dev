@@ -91,10 +91,22 @@ module controller(
   //
   wire [7:0] flag_mask;
 
-  assign flag_mask = ((op == C_OP_CLC) || (op == C_OP_SEC)) ? C_FLAG_MASK_C :
-                     ((op == C_OP_CLD) || (op == C_OP_SED)) ? C_FLAG_MASK_D :
-                     ((op == C_OP_CLI) || (op == C_OP_SEI)) ? C_FLAG_MASK_I :
-                     ((op == C_OP_CLI)) ? C_FLAG_MASK_V : 8'h00;
+  assign flag_mask = flag_signal(op);
+
+  function [7:0] flag_signal(input [5:0] op);
+    begin
+      case (op)
+        C_OP_CLC: flag_signal = C_FLAG_MASK_C;
+        C_OP_SEC: flag_signal = C_FLAG_MASK_C;
+        C_OP_CLD: flag_signal = C_FLAG_MASK_D;
+        C_OP_SED: flag_signal = C_FLAG_MASK_D;
+        C_OP_CLI: flag_signal = C_FLAG_MASK_I;
+        C_OP_SEI: flag_signal = C_FLAG_MASK_I;
+        C_OP_CLI: flag_signal = C_FLAG_MASK_V;
+        default:  flag_signal = 8'h00;
+      endcase
+    end
+  endfunction
 
   //
   // Is branch?
@@ -115,18 +127,26 @@ module controller(
   //
   wire [3:0] mov_src, mov_dst;
 
-  assign mov_src = ((op == C_OP_TAX) | (op == C_OP_TAY)) ? C_REG_SRC_A :
-                   ((op == C_OP_TXA) | (op == C_OP_TXS)) ? C_REG_SRC_X :
-                   ((op == C_OP_TYA)) ? C_REG_SRC_Y :
-                   ((op == C_OP_TSX)) ? C_REG_SRC_S : C_REG_SRC_T;
+  assign {mov_src, mov_dst} = mov_signal(op);
 
-  assign mov_dst = ((op == C_OP_TXA) | (op == C_OP_TYA) |
-                    (op == C_OP_LDA) | (op == C_OP_PLA)) ? C_REG_DST_A :
-                   ((op == C_OP_TAX) | (op == C_OP_TSX) |
-                    (op == C_OP_LDX)) ? C_REG_DST_X :
-                   ((op == C_OP_TAY) | (op == C_OP_LDY)) ? C_REG_DST_Y :
-                   ((op == C_OP_TXS)) ? C_REG_DST_S :
-                   ((op == C_OP_PLP)) ? C_REG_DST_P : C_REG_DST_T;
+  function [5:0] mov_signal(input [5:0] op);
+    begin
+      case (op)
+        C_OP_LDA: mov_signal = {C_REG_DST_T, C_REG_DST_A};
+        C_OP_LDX: mov_signal = {C_REG_DST_T, C_REG_DST_X};
+        C_OP_LDY: mov_signal = {C_REG_DST_T, C_REG_DST_Y};
+        C_OP_PLA: mov_signal = {C_REG_DST_T, C_REG_DST_A};
+        C_OP_PLP: mov_signal = {C_REG_DST_T, C_REG_DST_P};
+        C_OP_TAX: mov_signal = {C_REG_DST_A, C_REG_DST_X};
+        C_OP_TAY: mov_signal = {C_REG_DST_A, C_REG_DST_Y};
+        C_OP_TSX: mov_signal = {C_REG_DST_S, C_REG_DST_X};
+        C_OP_TXA: mov_signal = {C_REG_DST_X, C_REG_DST_A};
+        C_OP_TXS: mov_signal = {C_REG_DST_X, C_REG_DST_S};
+        C_OP_TYA: mov_signal = {C_REG_DST_Y, C_REG_DST_A};
+        default:  mov_signal = {C_REG_DST_T, C_REG_DST_T};
+      endcase
+    end
+  endfunction
 
   //
   // ALU Execution
