@@ -1,11 +1,11 @@
 module datapath #(
   parameter P_PCL_INIT = 8'h00,
   parameter P_PCH_INIT = 8'h00,
-  parameter P_A_INIT   = 8'h11, //00
-  parameter P_X_INIT   = 8'h22, //00
-  parameter P_Y_INIT   = 8'h33, //00
-  parameter P_S_INIT   = 8'hfe, //ff
-  parameter P_P_INIT   = 8'h20, //00
+  parameter P_A_INIT   = 8'h00,
+  parameter P_X_INIT   = 8'h00,
+  parameter P_Y_INIT   = 8'h00,
+  parameter P_S_INIT   = 8'hff,
+  parameter P_P_INIT   = 8'h00,
   parameter P_ABL_INIT = 8'h00,
   parameter P_ABH_INIT = 8'h00
 )(

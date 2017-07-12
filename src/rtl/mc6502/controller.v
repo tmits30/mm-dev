@@ -93,9 +93,9 @@ module controller(
 
   assign flag_mask = flag_signal(op);
 
-  function [7:0] flag_signal(input [5:0] IN_OP);
+  function [7:0] flag_signal(input [5:0] OP);
     begin
-      case (IN_OP)
+      case (OP)
         C_OP_CLC: flag_signal = C_FLAG_MASK_C;
         C_OP_SEC: flag_signal = C_FLAG_MASK_C;
         C_OP_CLD: flag_signal = C_FLAG_MASK_D;
@@ -129,21 +129,21 @@ module controller(
 
   assign {mov_src, mov_dst} = mov_signal(op);
 
-  function [5:0] mov_signal(input [5:0] IN_OP);
+  function [5:0] mov_signal(input [5:0] OP);
     begin
-      case (IN_OP)
-        C_OP_LDA: mov_signal = {C_REG_DST_T, C_REG_DST_A};
-        C_OP_LDX: mov_signal = {C_REG_DST_T, C_REG_DST_X};
-        C_OP_LDY: mov_signal = {C_REG_DST_T, C_REG_DST_Y};
-        C_OP_PLA: mov_signal = {C_REG_DST_T, C_REG_DST_A};
-        C_OP_PLP: mov_signal = {C_REG_DST_T, C_REG_DST_P};
-        C_OP_TAX: mov_signal = {C_REG_DST_A, C_REG_DST_X};
-        C_OP_TAY: mov_signal = {C_REG_DST_A, C_REG_DST_Y};
-        C_OP_TSX: mov_signal = {C_REG_DST_S, C_REG_DST_X};
-        C_OP_TXA: mov_signal = {C_REG_DST_X, C_REG_DST_A};
-        C_OP_TXS: mov_signal = {C_REG_DST_X, C_REG_DST_S};
-        C_OP_TYA: mov_signal = {C_REG_DST_Y, C_REG_DST_A};
-        default:  mov_signal = {C_REG_DST_T, C_REG_DST_T};
+      case (OP)
+        C_OP_LDA: mov_signal = {C_REG_SRC_T, C_REG_DST_A};
+        C_OP_LDX: mov_signal = {C_REG_SRC_T, C_REG_DST_X};
+        C_OP_LDY: mov_signal = {C_REG_SRC_T, C_REG_DST_Y};
+        C_OP_PLA: mov_signal = {C_REG_SRC_T, C_REG_DST_A};
+        C_OP_PLP: mov_signal = {C_REG_SRC_T, C_REG_DST_P};
+        C_OP_TAX: mov_signal = {C_REG_SRC_A, C_REG_DST_X};
+        C_OP_TAY: mov_signal = {C_REG_SRC_A, C_REG_DST_Y};
+        C_OP_TSX: mov_signal = {C_REG_SRC_S, C_REG_DST_X};
+        C_OP_TXA: mov_signal = {C_REG_SRC_X, C_REG_DST_A};
+        C_OP_TXS: mov_signal = {C_REG_SRC_X, C_REG_DST_S};
+        C_OP_TYA: mov_signal = {C_REG_SRC_Y, C_REG_DST_A};
+        default:  mov_signal = {C_REG_SRC_T, C_REG_DST_T};
       endcase
     end
   endfunction
@@ -156,10 +156,10 @@ module controller(
 
   assign {exe_ctrl, exe_src_a} = exe_signal(op, addr_mode);
 
-  function [6:0] exe_signal(input [5:0] IN_OP, input [3:0] IN_AM);
+  function [6:0] exe_signal(input [5:0] OP, input [3:0] ADDR_MODE);
     begin
-      if (IN_AM == C_ADDR_MODE_ACC)
-        case (IN_OP)
+      if (ADDR_MODE == C_ADDR_MODE_ACC)
+        case (OP)
           C_OP_ASL: exe_signal = {C_ALU_CTRL_ASL, C_ALU_SRC_A_A};
           C_OP_LSR: exe_signal = {C_ALU_CTRL_LSR, C_ALU_SRC_A_A};
           C_OP_ROL: exe_signal = {C_ALU_CTRL_ROL, C_ALU_SRC_A_A};
@@ -167,7 +167,7 @@ module controller(
           default:  exe_signal = 7'b0;
         endcase
       else
-        case (IN_OP)
+        case (OP)
           C_OP_ADC: exe_signal = {C_ALU_CTRL_ADC, C_ALU_SRC_A_A};
           C_OP_AND: exe_signal = {C_ALU_CTRL_AND, C_ALU_SRC_A_A};
           C_OP_BIT: exe_signal = {C_ALU_CTRL_BIT, C_ALU_SRC_A_A};
