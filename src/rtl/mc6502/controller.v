@@ -165,7 +165,7 @@ module controller(
           C_OP_LSR: exe_signal = {C_ALU_CTRL_LSR, C_ALU_SRC_A_A};
           C_OP_ROL: exe_signal = {C_ALU_CTRL_ROL, C_ALU_SRC_A_A};
           C_OP_ROR: exe_signal = {C_ALU_CTRL_ROR, C_ALU_SRC_A_A};
-          default:  exe_signal = 7'b0;
+          default:  exe_signal = {C_ALU_CTRL_THA, C_ALU_SRC_A_T};
         endcase
       else
         case (OP)
@@ -188,7 +188,7 @@ module controller(
           C_OP_LSR: exe_signal = {C_ALU_CTRL_LSR, C_ALU_SRC_A_T};
           C_OP_ROL: exe_signal = {C_ALU_CTRL_ROL, C_ALU_SRC_A_T};
           C_OP_ROR: exe_signal = {C_ALU_CTRL_ROR, C_ALU_SRC_A_T};
-          default:  exe_signal = 7'b0;
+          default:  exe_signal = {C_ALU_CTRL_THA, C_ALU_SRC_A_T};
         endcase
     end
   endfunction
