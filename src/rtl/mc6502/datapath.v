@@ -37,6 +37,7 @@ module datapath #(
   // Processor Status Register Control
   input [2:0]  P_SRC,
   input [7:0]  P_MASK,
+  input        P_WE,
 
   // ALU Control
   input [3:0]  ALU_CTRL,
@@ -169,9 +170,9 @@ module datapath #(
     .D0 (t),
     .D1 (DB_IN),
     .D2 (p_alu),
-    .D3 (p | P_MASK),
-    .D4 (p & ~P_MASK),
-    .D5 (p),
+    .D3 (p | P_MASK),  // Set a Flag
+    .D4 (p & ~P_MASK), // Clear a Flag
+    .D5 (8'h00), // Not used
     .D6 (8'h00), // Not used
     .D7 (8'h00), // Not used
     .S  (P_SRC),
@@ -181,7 +182,7 @@ module datapath #(
   flopenr #(P_P_INIT) p_reg(
     .CLK   (CLK),
     .RES_N (RES_N),
-    .WE    (1'b1),
+    .WE    (P_WE),
     .D     (p_wd),
     .Q     (p)
   );

@@ -35,6 +35,7 @@ module mpu(
   // Processor Status Register Control
   wire [2:0] p_src;
   wire [7:0] p_mask;
+  wire       p_we;
 
   // ALU Control
   wire [3:0] alu_ctrl;
@@ -72,6 +73,7 @@ module mpu(
     .T_WE         (t_we),
     .P_SRC        (p_src),
     .P_MASK       (p_mask),
+    .P_WE         (p_we),
     .ALU_CTRL     (alu_ctrl),
     .ALU_SRC_A    (alu_src_a),
     .ALU_SRC_B    (alu_src_b),
@@ -100,6 +102,7 @@ module mpu(
     .T_WE         (t_we),
     .P_SRC        (p_src),
     .P_MASK       (p_mask),
+    .P_WE         (p_we),
     .ALU_CTRL     (alu_ctrl),
     .ALU_SRC_A    (alu_src_a),
     .ALU_SRC_B    (alu_src_b),

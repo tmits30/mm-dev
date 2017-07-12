@@ -175,7 +175,6 @@ localparam C_P_SRC_MEM = 3'h1;
 localparam C_P_SRC_ALU = 3'h2;
 localparam C_P_SRC_SET = 3'h3;
 localparam C_P_SRC_CLR = 3'h4;
-localparam C_P_SRC_NON = 3'h5;
 
 localparam C_ALU_SRC_A_A   = 3'h0;
 localparam C_ALU_SRC_A_X   = 3'h1;

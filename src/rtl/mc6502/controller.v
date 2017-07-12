@@ -33,6 +33,7 @@ module controller(
   // Processor Status Register Control
   output reg [2:0] P_SRC,
   output reg [7:0] P_MASK,
+  output reg       P_WE,
 
   // ALU Control
   output reg [3:0] ALU_CTRL,
@@ -340,6 +341,7 @@ module controller(
     // Processor Status Register
     P_SRC = C_P_SRC_ALU;
     P_MASK = 8'h00;
+    P_WE = 1'b1;
 
     // Program Counter
     PCADDER_CTRL = C_PCADDER_CTRL_NOP;
@@ -388,7 +390,7 @@ module controller(
         else if (is_clr_op)
           P_SRC = C_P_SRC_CLR;
         else
-          P_SRC = C_P_SRC_NON;
+          P_WE = 1'b0;
 
         // Program Counter
         PCADDER_CTRL = C_PCADDER_CTRL_INC;
@@ -542,7 +544,7 @@ module controller(
         ALU_SRC_A = C_ALU_SRC_A_S;
 
         // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
+        P_WE = 1'b0;
 
         // Update Stack Pointer
         REG_SRC = C_REG_SRC_ALU;
@@ -562,7 +564,7 @@ module controller(
         ALU_SRC_A = C_ALU_SRC_A_S;
 
         // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
+        P_WE = 1'b0;
 
         // Update Stack Pointer
         REG_SRC = C_REG_SRC_ALU;
@@ -755,7 +757,7 @@ module controller(
         S_WE = 1'b1;
 
         // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
+        P_WE = 1'b0;
 
         // Address Bus (0x01, S - 1)
         ABL_SRC = C_ABL_SRC_ALU;
@@ -777,7 +779,7 @@ module controller(
         S_WE = 1'b1;
 
         // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
+        P_WE = 1'b0;
 
         // Address Bus (0x01, (S - 1) - 1)
         ABL_SRC = C_ABL_SRC_ALU;
@@ -799,7 +801,7 @@ module controller(
         S_WE = 1'b1;
 
         // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
+        P_WE = 1'b0;
 
         // Address Bus (FF, FE)
         ABL_SRC = C_ABL_SRC_HFE;
@@ -841,7 +843,7 @@ module controller(
         S_WE = 1'b1;
 
         // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
+        P_WE = 1'b0;
 
         // Address Bus (0x01, S + 1)
         ABL_SRC = C_ABL_SRC_ALU;
@@ -864,7 +866,7 @@ module controller(
         S_WE = 1'b1;
 
         // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
+        P_WE = 1'b0;
 
         // Address Bus (0x01, S + 1)
         ABL_SRC = C_ABL_SRC_PCC;
@@ -882,7 +884,7 @@ module controller(
         S_WE = 1'b1;
 
         // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
+        P_WE = 1'b0;
 
         // Address Bus (0x01, S + 1)
         ABL_SRC = C_ABL_SRC_ALU;
@@ -914,7 +916,7 @@ module controller(
         S_WE = 1'b1;
 
         // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
+        P_WE = 1'b0;
 
         // Restore Program Counter
         PCL_SRC = C_PCL_SRC_MEM;
@@ -945,7 +947,7 @@ module controller(
         S_WE = 1'b1;
 
         // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
+        P_WE = 1'b0;
 
         // Address Bus (0x01, S + 1)
         ABL_SRC = C_ABL_SRC_ALU;
@@ -961,7 +963,7 @@ module controller(
         S_WE = 1'b1;
 
         // Processor Status Register
-        P_SRC = C_P_SRC_NON; // NOT from ALU
+        P_WE = 1'b0;
 
         // Restore Program Counter
         PCL_SRC = C_PCL_SRC_MEM;
