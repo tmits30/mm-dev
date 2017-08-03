@@ -15,8 +15,9 @@ VERILATOR = verilator
 
 CFLAGS    = -std=c++14 -Wall -g
 CFLAGS   += -O0
-LDFLAGS   = 
+LDFLAGS   = -lyaml-cpp
 LDLIBS    = 
+INCLUDE   = 
 
 OUTPUT    = -cc
 TRACE     = --trace --trace-structs
@@ -39,7 +40,7 @@ obj_dir/Vmpu: sim_mpu.cpp
 	SYSTEMC_INCLUDE=$(SYSTEMC_INCLUDE) \
 	SYSTEMC_LIBDIR=$(SYSTEMC_LIBDIR) \
 		$(VERILATOR) $(OUTPUT) $(TRACE) -Wall \
-		-CFLAGS "$(CFLAGS)" -LDFLAGS "$(LDFLAGS)" -LDLIBS "$(LDLIBS)" \
+		-CFLAGS "$(CFLAGS)" -LDFLAGS "$(LDFLAGS)" \
 		-I$(RTL_ROOT)/mc6502 mpu.v --exe $^
 	make -C obj_dir -f Vmpu.mk
 

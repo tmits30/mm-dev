@@ -2,20 +2,24 @@
 // Simlation for MC6502 MPU
 //------------------------------------------------------------------------------
 
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <stdio.h>
 
+#include <yaml-cpp/yaml.h>
+
 #include "verilated_vcd_c.h"
 #include "Vmpu.h"
 
 
-template <typename T, int D = 2>
+template <int D = 2, typename T>
 decltype(auto) HexString(const T& x)
 {
     std::stringstream ret;
-    ret << std::hex << std::setw(D) << std::setfill('0') << static_cast<int>(x);
+    ret << "0x" << std::hex << std::setw(D) << std::setfill('0')
+        << static_cast<int>(x);
     return ret.str();
 }
 
@@ -24,8 +28,9 @@ class Memory
 {
 public:
 
-    using bus_t = vluint8_t;
     using addr_t = vluint16_t;
+    using bus_t = vluint8_t;
+    using mem_t = std::tuple<addr_t, bus_t>;
 
     Memory(const std::size_t bits = 8, const std::size_t depth = 0xffff) :
         bits_(bits),
@@ -55,6 +60,11 @@ public:
         std::fill(buf_.get(), buf_.get() + depth_, 0);
     }
 
+    void Set(const std::vector<mem_t>& mem_vec)
+    {
+        for (const auto& d : mem_vec) Write(d);
+    }
+
     void Show()
     {
         for (auto i = decltype(depth_)(0); i < depth_; ++i) {
@@ -64,6 +74,12 @@ public:
         }
         printf("\n");
     }
+
+    // Getter
+    std::size_t Depth() { return depth_; }
+    std::size_t Bits() { return bits_; }
+    const std::size_t Depth() const { return depth_; }
+    const std::size_t Bits() const { return bits_; }
 
 
 private:
@@ -78,9 +94,9 @@ class TestBench
 {
 public:
 
-    using bus_t = vluint8_t;
-    using addr_t = vluint16_t;
-    using mem_t = std::tuple<addr_t, bus_t>;
+    using addr_t = Memory::addr_t;
+    using bus_t = Memory::bus_t;
+    using mem_t = Memory::mem_t;
 
     const int PERIOD = 1;
 
@@ -89,7 +105,8 @@ public:
         mem_(std::make_unique<Memory>()),
         vcd_(std::make_unique<VerilatedVcdC>()),
         vcd_file_(vcd_file),
-        verbose_(verbose)
+        verbose_(verbose),
+        time_(0)
     {
         if (vcd_file_) {
             Verilated::traceEverOn(true);
@@ -107,17 +124,17 @@ public:
     }
 
     void Reset(
-        const std::vector<mem_t>& mem,
-        const addr_t a = 0x00,
-        const addr_t x = 0x00,
-        const addr_t y = 0x00,
-        const addr_t s = 0xff,
-        const addr_t p = 0x00,
-        const addr_t ab = 0x00,
-        const addr_t pc = 0x00)
+        const std::vector<mem_t>& mem_vec,
+        const bus_t a = 0x11,
+        const bus_t x = 0x22,
+        const bus_t y = 0x33,
+        const bus_t s = 0xff,
+        const bus_t p = 0x00,
+        const addr_t ab = 0x0000,
+        const addr_t pc = 0x0000)
     {
         // Reset memory
-        for (auto d : mem) mem_->Write(d);
+        mem_->Set(mem_vec);
 
         // Reset register
         RDY(1); RES_N(0); CLK(0);
@@ -132,23 +149,25 @@ public:
         // Set register
         RES_N(1); CLK(1);
         A(a); X(x); Y(y); S(s); P(p); AB(ab); PC(pc);
+        top_->mpu__DOT__controller__DOT__cur_state = 0;
+        top_->mpu__DOT__controller__DOT__nxt_state = 1;
     }
 
     void Run(const int cycles)
     {
-        const auto end_clk = (PERIOD * 2) * (cycles + 1);
-        for (auto i = decltype(end_clk)(0); i < end_clk; ++i) {
+        const auto end_clk = PERIOD * (2 * (cycles + 1) + 1) + time_;
+        for (; time_ < end_clk; ++time_) {
             // Memory ops
             DB_IN(mem_->Read(AB()));
             mem_->Write(AB(), DB_OUT(), R_W() == 0);
 
             // Dump signals
             if (vcd_file_) {
-                vcd_->dump(i);
+                vcd_->dump(time_);
             }
 
             // Execute
-            if ((i % PERIOD) == 0) {
+            if ((time_ % PERIOD) == 0) {
                 CLK(!CLK());
                 if (verbose_) {
                     ShowRegister();
@@ -157,6 +176,78 @@ public:
             }
             top_->eval();
         }
+    }
+
+    bool Verify(
+        const std::vector<mem_t>& mem_vec,
+        const bus_t a = 0x11,
+        const bus_t x = 0x22,
+        const bus_t y = 0x33,
+        const bus_t s = 0xff,
+        const bus_t p = 0x00,
+        const addr_t ab = 0x0000,
+        const addr_t pc = 0x0000)
+    {
+        bool ret = true;
+
+        auto error_log = [](const bus_t expected, const bus_t actual) {
+            std::stringstream ret;
+            ret << " (expected " << HexString(expected)
+            << ", actual " << HexString(actual) << ")";
+            return ret.str();
+        };
+
+        // Verify register
+        if (A() != a) {
+            ret = false;
+            std::cout << "error: A register"
+                      << error_log(a, A()) << std::endl;
+        }
+        if (X() != x) {
+            ret = false;
+            std::cout << "error: X register"
+                      << error_log(x, X()) << std::endl;
+        }
+        if (Y() != y) {
+            ret = false;
+            std::cout << "error: Y register"
+                      << error_log(y, Y()) << std::endl;
+        }
+        if (S() != s) {
+            ret = false;
+            std::cout << "error: S register"
+                      << error_log(s, S()) << std::endl;
+        }
+        if (P() != p) {
+            ret = false;
+            std::cout << "error: P register"
+                      << error_log(p, P()) << std::endl;
+        }
+        if (AB() != ab) {
+            ret = false;
+            std::cout << "error: AB register"
+                      << error_log(ab, AB()) << std::endl;
+        }
+        if (PC() != pc) {
+            ret = false;
+            std::cout << "error: PC register"
+                      << error_log(pc, PC()) << std::endl;
+        }
+
+        // Verify memory
+        const auto mem_depth = mem_->Depth();
+        auto expect_mem = std::make_unique<Memory>();
+        expect_mem->Set(mem_vec);
+        for (auto i = decltype(mem_depth)(0); i < mem_depth; ++i) {
+            if (mem_->Read(i) != expect_mem->Read(i)) {
+                ret = false;
+                std::cout << "error: address " << HexString<4>(i)
+                          << error_log(expect_mem->Read(i), mem_->Read(i))
+                          << std::endl;
+            }
+        }
+
+        return ret;
     }
 
     void ShowRegister() const
@@ -257,6 +348,8 @@ private:
     std::unique_ptr<VerilatedVcdC> vcd_;
     const char *vcd_file_;
     const bool verbose_;
+
+    int time_;
 };
 
 
@@ -266,12 +359,56 @@ int main(int argc, char **argv)
 
     auto tb = std::make_unique<TestBench>("sim_mpu.vcd");
 
-    TestBench::mem_t mem[] = {
-        TestBench::mem_t(0x0000, 0x38),
+    const auto test_patterns = YAML::LoadFile("sim_mpu.yml");
+
+    auto load_mem = [](const YAML::Node& mem_node) {
+        std::vector<TestBench::mem_t> ret;
+        for (const auto& mem : mem_node) {
+            const auto addr = mem.first.as<int>();
+            const auto data = mem.second.as<int>();
+            ret.emplace_back(TestBench::mem_t(addr, data));
+        }
+        return ret;
     };
-    tb->Reset(std::vector<TestBench::mem_t>(mem, mem + 1),
-              0x11, 0x22, 0x33, 0xef, 0x20);
-    tb->Run(2);
+
+    for (const auto& op : test_patterns) {
+        const auto op_name = op["name"].as<std::string>();
+        std::cout << op_name << std::endl;
+
+        for (const auto& mode : op["mode"]) {
+            const auto mode_name = mode["name"].as<std::string>();
+            std::cout << mode_name << std::endl;
+
+            // Execute a test pattern
+            const auto input = mode["input"];
+            tb->Reset(
+                load_mem(input["mem"]),
+                input["reg"]["A"].as<int>(),
+                input["reg"]["X"].as<int>(),
+                input["reg"]["Y"].as<int>(),
+                input["reg"]["S"].as<int>(),
+                input["reg"]["P"].as<int>(),
+                input["reg"]["AB"].as<int>(),
+                input["reg"]["PC"].as<int>()
+            );
+            tb->Run(mode["cycle"].as<int>());
+
+            // Verify the test
+            const auto expected = mode["expected"];
+            const auto is_valid = tb->Verify(
+                load_mem(expected["mem"]),
+                expected["reg"]["A"].as<int>(),
+                expected["reg"]["X"].as<int>(),
+                expected["reg"]["Y"].as<int>(),
+                expected["reg"]["S"].as<int>(),
+                expected["reg"]["P"].as<int>(),
+                expected["reg"]["AB"].as<int>(),
+                expected["reg"]["PC"].as<int>()
+            );
+
+            std::cout << is_valid << std::endl;
+        }
+    }
 
     return 0;
 }
