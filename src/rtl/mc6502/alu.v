@@ -30,10 +30,12 @@ module alu(
     if (CTRL == C_ALU_CTRL_THA) begin
       ret[7:0] = A;
     end else if (CTRL == C_ALU_CTRL_BIT) begin
+      ret[7:0] = A;
       flag_n = B[7];
       flag_v = B[6];
       flag_z = and_ab == 8'h00;
     end else if (CTRL == C_ALU_CTRL_CMP) begin
+      ret[7:0] = A;
       flag_n = sub_ab[7];
       flag_z = sub_ab[7:0] == 8'h00;
       flag_c = sub_ab[8];
@@ -75,7 +77,7 @@ module alu(
           flag_c = ret[8];
         end
         C_ALU_CTRL_SBC: begin
-          ret = sub_ab + {7'b0, in_carry} - 8'b1;
+          ret = sub_ab - {7'b0, in_carry};
           flag_c = ret[8];
         end
         default: begin
