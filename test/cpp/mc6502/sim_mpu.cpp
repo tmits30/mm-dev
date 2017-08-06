@@ -14,11 +14,11 @@
 #include "Vmpu.h"
 
 
-template <int D = 2, typename T>
-decltype(auto) HexString(const T& x)
+template <typename T>
+decltype(auto) HexString(const T& x, const int d = 2)
 {
     std::stringstream ret;
-    ret << "0x" << std::hex << std::setw(D) << std::setfill('0')
+    ret << "0x" << std::hex << std::setw(d) << std::setfill('0')
         << static_cast<int>(x);
     return ret.str();
 }
@@ -196,10 +196,10 @@ public:
     {
         bool ret = true;
 
-        auto error_log = [](const bus_t expected, const bus_t actual) {
+        auto error_log = [](const int e, const int a, const int d = 2) {
             std::stringstream ret;
-            ret << " (expected " << HexString(expected)
-            << ", actual " << HexString(actual) << ")";
+            ret << " (expected " << HexString(e, d)
+                << ", actual " << HexString(a, d) << ")";
             return ret.str();
         };
 
@@ -232,12 +232,12 @@ public:
         if (AB() != ab) {
             ret = false;
             std::cout << "error: AB register"
-                      << error_log(ab, AB()) << std::endl;
+                      << error_log(ab, AB(), 4) << std::endl;
         }
         if (PC() != pc) {
             ret = false;
             std::cout << "error: PC register"
-                      << error_log(pc, PC()) << std::endl;
+                      << error_log(pc, PC(), 4) << std::endl;
         }
 
         // Verify memory
@@ -247,7 +247,7 @@ public:
         for (auto i = decltype(mem_depth)(0); i < mem_depth; ++i) {
             if (mem_->Read(i) != expect_mem->Read(i)) {
                 ret = false;
-                std::cout << "error: address " << HexString<4>(i)
+                std::cout << "error: address " << HexString(i, 4)
                           << error_log(expect_mem->Read(i), mem_->Read(i))
                           << std::endl;
             }
@@ -372,7 +372,7 @@ int main(int argc, char **argv)
     auto tb = std::make_unique<TestBench>("sim_mpu.vcd", false);
 
     // Read test config yaml file
-    const auto test_patterns = YAML::LoadFile("sim_mpu.yml");
+    const auto test_patterns = YAML::LoadFile("sim_mpu_dev.yml");
 
     // Load memory vector from yaml file function
     auto load_mem = [](const YAML::Node& mem_node) {
