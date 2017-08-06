@@ -383,12 +383,14 @@ module controller(
         P_MASK = flag_mask;
         if (mov_dst == C_REG_DST_P)
           P_SRC = C_P_SRC_T; // PLP only
-        else if (exe_ctrl != C_ALU_CTRL_THA)
-          P_SRC = C_P_SRC_ALU;
         else if (is_set_op)
           P_SRC = C_P_SRC_SET;
         else if (is_clr_op)
           P_SRC = C_P_SRC_CLR;
+        else if (is_rmw_op)
+          P_WE = 1'b0;
+        else if (exe_ctrl != C_ALU_CTRL_THA)
+          P_SRC = C_P_SRC_ALU;
         else
           P_WE = 1'b0;
 
@@ -496,7 +498,7 @@ module controller(
       end
       C_STATE_TX_W_DATA: begin
         // Data Bus
-        R_W = C_RW_W;;
+        R_W = C_RW_W;
         if (op == C_OP_STA)
           DB_OUT_SRC = C_DB_OUT_SRC_A;
         else if (op == C_OP_STX)
