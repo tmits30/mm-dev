@@ -417,8 +417,10 @@ module controller(
           PCADDER_CTRL = C_PCADDER_CTRL_INC;
         PCL_SRC = C_PCL_SRC_ADD;
         PCH_SRC = C_PCH_SRC_ADD;
-        PCL_WE = 1'b1;
-        PCH_WE = 1'b1;
+        if (addr_mode != C_ADDR_MODE_ACC) begin
+          PCL_WE = 1'b1;
+          PCH_WE = 1'b1;
+        end
 
         // Address Bus
         if (addr_mode == C_ADDR_MODE_INX ||
