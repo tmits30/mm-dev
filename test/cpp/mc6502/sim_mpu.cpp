@@ -372,7 +372,7 @@ int main(int argc, char **argv)
     auto tb = std::make_unique<TestBench>("sim_mpu.vcd", false);
 
     // Read test config yaml file
-    const auto test_patterns = YAML::LoadFile("sim_mpu_dev.yml");
+    const auto test_patterns = YAML::LoadFile("sim_mpu.yml");
 
     // Load memory vector from yaml file function
     auto load_mem = [](const YAML::Node& mem_node) {
