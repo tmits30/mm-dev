@@ -1,4 +1,6 @@
+# ------------------------------------------------------------------------------
 # Single Byte Instructions
+# ------------------------------------------------------------------------------
 
 - name: NOP
   mode:
@@ -197,3 +199,47 @@
       expected:
         reg: {A: 0x11, X: 0x22, Y: 0x34, S: 0xff, P: 0x00, AB: 0x0002, PC: 0x0002}
         mem: {0x0000: 0xc8}
+
+- name: ASL
+  mode:
+    - name: acc
+      cycle: 2
+      input:
+        reg: {A: 0x11, X: 0x22, Y: 0x33, S: 0xff, P: 0x00, AB: 0x0000, PC: 0x0000}
+        mem: {0x0000: 0x0a}
+      expected:
+        reg: {A: 0x22, X: 0x22, Y: 0x33, S: 0xff, P: 0x00, AB: 0x0002, PC: 0x0002}
+        mem: {0x0000: 0x0a}
+
+- name: LSR
+  mode:
+    - name: acc
+      cycle: 2
+      input:
+        reg: {A: 0x22, X: 0x22, Y: 0x33, S: 0xff, P: 0x00, AB: 0x0000, PC: 0x0000}
+        mem: {0x0000: 0x4a}
+      expected:
+        reg: {A: 0x11, X: 0x22, Y: 0x33, S: 0xff, P: 0x00, AB: 0x0002, PC: 0x0002}
+        mem: {0x0000: 0x4a}
+
+- name: ROL
+  mode:
+    - name: acc
+      cycle: 2
+      input:
+        reg: {A: 0x11, X: 0x22, Y: 0x33, S: 0xff, P: 0x00, AB: 0x0000, PC: 0x0000}
+        mem: {0x0000: 0x2a}
+      expected:
+        reg: {A: 0x22, X: 0x22, Y: 0x33, S: 0xff, P: 0x00, AB: 0x0002, PC: 0x0002}
+        mem: {0x0000: 0x2a}
+
+- name: ROR
+  mode:
+    - name: acc
+      cycle: 2
+      input:
+        reg: {A: 0x22, X: 0x22, Y: 0x33, S: 0xff, P: 0x00, AB: 0x0000, PC: 0x0000}
+        mem: {0x0000: 0x6a}
+      expected:
+        reg: {A: 0x11, X: 0x22, Y: 0x33, S: 0xff, P: 0x00, AB: 0x0002, PC: 0x0002}
+        mem: {0x0000: 0x6a}
