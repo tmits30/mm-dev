@@ -12,15 +12,13 @@ module alu(
   reg [8:0]    ret;
   reg          flag_c, flag_z, flag_v, flag_n;
 
-  wire [7:0]   and_ab, shl_a, shr_a;
+  wire [7:0]   and_ab;
   wire [8:0]   add_ab, sub_ab;
   wire         in_carry;
 
   assign and_ab = A & B;
   assign add_ab = A + B;
   assign sub_ab = A - B;
-  assign shl_a = A << 1;
-  assign shr_a = A >> 1;
   assign in_carry = FLAG_IN[C_FLAG_SHFT_C];
 
   always @(*) begin
@@ -48,19 +46,19 @@ module alu(
           ret = A - 8'h01;
         end
         C_ALU_CTRL_ASL: begin
-          ret[7:0] = shl_a;
+          ret[7:0] = {A[6:0], 1'b0};
           flag_c = A[7];
         end
         C_ALU_CTRL_LSR: begin
-          ret[7:0] = shr_a;
+          ret[7:0] = {1'b0, A[7:1]};
           flag_c = A[0];
         end
         C_ALU_CTRL_ROL: begin
-          ret = {shl_a, in_carry};
+          ret = {A, in_carry};
           flag_c = A[7];
         end
         C_ALU_CTRL_ROR: begin
-          ret = {in_carry, shr_a};
+          ret = {A[0], in_carry, A[7:1]};
           flag_c = A[0];
         end
         C_ALU_CTRL_AND: begin
