@@ -53,7 +53,7 @@ module alu(
         end
         C_ALU_CTRL_LSR: begin
           ret[7:0] = shr_a;
-          flag_c = A[1];
+          flag_c = A[0];
         end
         C_ALU_CTRL_ROL: begin
           ret = {shl_a, in_carry};
@@ -61,7 +61,7 @@ module alu(
         end
         C_ALU_CTRL_ROR: begin
           ret = {in_carry, shr_a};
-          flag_c = A[1];
+          flag_c = A[0];
         end
         C_ALU_CTRL_AND: begin
           ret[7:0] = and_ab;
