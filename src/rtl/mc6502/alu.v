@@ -1,3 +1,8 @@
+// References
+// - http://www.6502.org/tutorials/compare_instructions.html
+// - http://www.6502.org/tutorials/decimal_mode.html
+// - http://www.6502.org/tutorials/vflag.html
+
 module alu(
   input [7:0]  A,
   input [7:0]  B,
@@ -38,7 +43,7 @@ module alu(
       ret[7:0] = A;
       flag_n = sub_ab[7];
       flag_z = sub_ab[7:0] == 8'h00;
-      flag_c = sub_ab[8];
+      flag_c = sub_ab[8] || sub_ab[7:0] == 8'h00;
     end else begin
       case (CTRL)
         C_ALU_CTRL_INC: begin
@@ -73,12 +78,24 @@ module alu(
           ret[7:0] = A ^ B;
         end
         C_ALU_CTRL_ADC: begin
-          ret = add_ab + {7'b0, in_carry};
-          flag_c = ret[8];
+          if (FLAG_IN[C_FLAG_SHFT_D]) begin
+            // TODO: not implemented
+          end else begin
+            ret = add_ab + {7'b0, in_carry};
+            flag_c = ret[8];
+            flag_v = ((A[7] == 0 && B[7] == 0) ||
+                      (A[7] == 1 && B[7] == 1)) && (ret[7] == 1);
+          end
         end
         C_ALU_CTRL_SBC: begin
-          ret = sub_ab - {7'b0, in_carry};
-          flag_c = ret[8];
+          if (FLAG_IN[C_FLAG_SHFT_D]) begin
+            // TODO: not implemented
+          end else begin
+            ret = sub_ab - {7'b0, in_carry};
+            flag_c = ret[8];
+            flag_v = ((A[7] == 0 && B[7] == 1) ||
+                      (A[7] == 1 && B[7] == 0)) && (ret[7] == 1);
+          end
         end
         default: begin
           ret[7:0] = A;
