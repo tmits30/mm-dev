@@ -380,16 +380,16 @@ int main(int argc, char **argv)
             const auto mode_name = mode["name"].as<std::string>();
 
             // Execute a test pattern
-            const auto& input = mode["input"];
+            const auto& initial = mode["initial"];
             tb->Reset(
-                load_mem(input["mem"]),
-                input["reg"]["A"].as<int>(),
-                input["reg"]["X"].as<int>(),
-                input["reg"]["Y"].as<int>(),
-                input["reg"]["S"].as<int>(),
-                input["reg"]["P"].as<int>(),
-                input["reg"]["AB"].as<int>(),
-                input["reg"]["PC"].as<int>()
+                load_mem(initial["mem"]),
+                initial["reg"]["A"].as<int>(),
+                initial["reg"]["X"].as<int>(),
+                initial["reg"]["Y"].as<int>(),
+                initial["reg"]["S"].as<int>(),
+                initial["reg"]["P"].as<int>(),
+                initial["reg"]["AB"].as<int>(),
+                initial["reg"]["PC"].as<int>()
             );
             tb->Run(mode["cycle"].as<int>());
 
