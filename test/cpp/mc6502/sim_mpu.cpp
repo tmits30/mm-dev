@@ -420,8 +420,8 @@ int main(int argc, char **argv)
                 expected["reg"]["PC"].as<int>()
             );
 
-            printf("%s: %s: %s\n", op_name.c_str(), mode_name.c_str(),
-                   is_valid ? "Success" : "Fail");
+            printf("%8s: %s: %s\n", is_valid ? "Success" : "Fail",
+                   op_name.c_str(), mode_name.c_str());
         }
     }
 
