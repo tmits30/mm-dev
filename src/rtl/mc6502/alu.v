@@ -83,8 +83,8 @@ module alu(
           end else begin
             ret = add_ab + {7'b0, in_carry};
             flag_c = ret[8];
-            flag_v = ((A[7] == 0 && B[7] == 0) ||
-                      (A[7] == 1 && B[7] == 1)) && (ret[7] == 1);
+            flag_v = (A[7] == 0 && B[7] == 0 && ret[7] == 1) ||
+                     (A[7] == 1 && B[7] == 1 && ret[7] == 0);
           end
         end
         C_ALU_CTRL_SBC: begin
@@ -93,8 +93,8 @@ module alu(
           end else begin
             ret = sub_ab - {7'b0, in_carry};
             flag_c = ret[8];
-            flag_v = ((A[7] == 0 && B[7] == 1) ||
-                      (A[7] == 1 && B[7] == 0)) && (ret[7] == 1);
+            flag_v = (A[7] == 0 && B[7] == 1 && ret[7] == 1) ||
+                     (A[7] == 1 && B[7] == 0 && ret[7] == 0);
           end
         end
         default: begin
