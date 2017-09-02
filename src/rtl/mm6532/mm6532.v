@@ -208,15 +208,14 @@ module mm6532(
         data_out = (PB_IN & ~ddrb) | (drb & ddrb);
       else if (ddrb_en)
         data_out = ddrb;
-      else if (tim_en & tim[7] == 1'b0)
+      else if (tim_en)
         data_out = tim;
-      else if (tim_en & tim[7] == 1'b1)
-        data_out = ~tim + 1;
       else if (irq_en)
         data_out = {tim_irq, pa7_irq, 6'b0};
       else
         data_out = 8'h00;
     end
+  endfunction
 
   assign D_OUT = data_out();
 
