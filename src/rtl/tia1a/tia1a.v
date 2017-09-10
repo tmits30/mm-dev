@@ -252,8 +252,8 @@ module tia1a(
         colupx <= colubk;
   end
 
-  assign LUM = hblank ? 3'b0 : colupx[3:1];
-  assign COL = hblank ? 4'b0 : colupx[7:4];
+  assign LUM = HBLANK ? 3'b0 : colupx[3:1];
+  assign COL = HBLANK ? 4'b0 : colupx[7:4];
 
   //
   // Input ports
@@ -416,35 +416,35 @@ module tia1a(
           end
           C_TIA_WADDR_RESP0: begin
             // reset player 0
-            if (hblank)
+            if (HBLANK)
               posp0 <= pixel + 8'd3;
             else
               posp0 <= pixel;
           end
           C_TIA_WADDR_RESP1: begin
             // reset player 1
-            if (hblank)
+            if (HBLANK)
               posp1 <= pixel + 8'd3;
             else
               posp1 <= pixel;
           end
           C_TIA_WADDR_RESM0: begin
             // reset missile 0
-            if (hblank)
+            if (HBLANK)
               posm0 <= pixel + 8'd2;
             else
               posm0 <= pixel;
           end
           C_TIA_WADDR_RESM1: begin
             // reset missile 1
-            if (hblank)
+            if (HBLANK)
               posm1 <= pixel + 8'd2;
             else
               posm1 <= pixel;
           end
           C_TIA_WADDR_RESBL: begin
             // reset ball
-            if (hblank)
+            if (HBLANK)
               posbl <= pixel + 8'd2;
             else
               posbl <= pixel;
