@@ -15,7 +15,7 @@ module ram(
       for (i = 0; i < 128; i = i + 1)
         mem[i] = 8'b0;
     else if (WE)
-      mem[A] <= WD;
+      mem[A] = WD;
   end
 
   assign RD = mem[A];

@@ -15,6 +15,7 @@ module itimer(
   reg [1:0]        mode;
   reg [9:0]        div_cnt;
   reg [8:0]        tim_cnt;
+  reg              stop;
 
   always @(posedge CLK) begin
     if (!RES_N)
@@ -30,6 +31,17 @@ module itimer(
       div_cnt <= 10'b0;
     else
       div_cnt <= div_cnt + 10'b1;
+  end
+
+  always @(posedge CLK) begin
+    if (!RES_N)
+      stop <= 1'b0;
+    else if (WE)
+      stop <= 1'b0;
+    else if (tim_cnt == 9'b0)
+      stop <= 1'b1;
+    else
+      stop <= stop;
   end
 
   always @(posedge CLK) begin

@@ -126,7 +126,7 @@ module mm6532(
   reg          pa7_irq, tim_irq;
   reg          pa7_irq_en, tim_irq_en;
 
-  assign pa7 = (PA[7] & ~ddra[7]) | (dra[7] & ddra[7]);
+  assign pa7 = (PA_IN[7] & ~ddra[7]) | (dra[7] & ddra[7]);
 
   always @(posedge CLK) begin
     if (!RES_N)
@@ -158,7 +158,7 @@ module mm6532(
   always @(posedge CLK) begin
     if (!RES_N)
       tim_irq <= 1'b0;
-    else if (tim == 8'f00)
+    else if (tim == 8'h00)
       tim_irq <= 1'b1;
     else if (tim_en)
       tim_irq <= 1'b0;
@@ -203,5 +203,8 @@ module mm6532(
   endfunction
 
   assign D_OUT = data_out();
+
+  assign PA_OUT = dra & ddra;
+  assign PB_OUT = drb & ddrb;
 
 endmodule
