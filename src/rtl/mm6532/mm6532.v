@@ -63,40 +63,44 @@ module mm6532(
   // Data register A/B and DDR A/B
   //
 
-  wire [7:0]   dra, drb;   // Data register
-  wire [7:0]   ddra, ddrb; // Data direction register
+  reg [7:0] dra, drb;   // Data register
+  reg [7:0] ddra, ddrb; // Data direction register
 
-  flopenr dra_reg(
-    .CLK   (CLK),
-    .RES_N (RES_N),
-    .WE    (dra_en & !R_W),
-    .D     (D_IN),
-    .Q     (dra)
-  );
+  always @(posedge CLK) begin
+    if (!RES_N)
+      dra <= 8'h00;
+    else if (dra_en & !R_W)
+      dra <= D_IN;
+    else
+      dra <= dra;
+  end
 
-  flopenr ddra_reg(
-    .CLK   (CLK),
-    .RES_N (RES_N),
-    .WE    (ddra_en & !R_W),
-    .D     (D_IN),
-    .Q     (ddra)
-  );
+  always @(posedge CLK) begin
+    if (!RES_N)
+      ddra <= 8'h00;
+    else if (ddra_en & !R_W)
+      ddra <= D_IN;
+    else
+      ddra <= ddra;
+  end
 
-  flopenr drb_reg(
-    .CLK   (CLK),
-    .RES_N (RES_N),
-    .WE    (drb_en & !R_W),
-    .D     (D_IN),
-    .Q     (drb)
-  );
+  always @(posedge CLK) begin
+    if (!RES_N)
+      drb <= 8'h00;
+    else if (drb_en & !R_W)
+      drb <= D_IN;
+    else
+      drb <= drb;
+  end
 
-  flopenr ddrb_reg(
-    .CLK   (CLK),
-    .RES_N (RES_N),
-    .WE    (ddrb_en & !R_W),
-    .D     (D_IN),
-    .Q     (ddrb)
-  );
+  always @(posedge CLK) begin
+    if (!RES_N)
+      ddrb <= 8'h00;
+    else if (ddrb_en & !R_W)
+      ddrb <= D_IN;
+    else
+      ddrb <= ddrb;
+  end
 
   //
   // Interval timer
