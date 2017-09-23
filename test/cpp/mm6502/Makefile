@@ -41,7 +41,7 @@ obj_dir/Vmpu: sim_mpu.cpp
 	SYSTEMC_LIBDIR=$(SYSTEMC_LIBDIR) \
 		$(VERILATOR) $(OUTPUT) $(TRACE) -Wall \
 		-CFLAGS "$(CFLAGS)" -LDFLAGS "$(LDFLAGS)" \
-		-I$(RTL_ROOT)/mc6502 mpu.v --exe $^
+		-I$(RTL_ROOT)/mm6502 mpu.v --exe $^
 	make -C obj_dir -f Vmpu.mk
 
 run_sim: obj_dir/Vmpu
