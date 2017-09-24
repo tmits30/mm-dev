@@ -117,16 +117,20 @@ module mm6532(
     .OUT   (tim)
   );
 
+  // I/O ports
+
+  wire [7:0]   pa, pb;
+
+  assign pa = (PA_IN & ~ddra) | (dra & ddra);
+  assign pb = (PB_IN & ~ddrb) | (drb & ddrb);
+
   //
   // Interrupt flag
   //
 
-  wire         pa7;
   reg          pa7_irq_mode; // A0 = 0/1 for negative/positive edge-detect
   reg          pa7_irq, tim_irq;
   reg          pa7_irq_en, tim_irq_en;
-
-  assign pa7 = (PA_IN[7] & ~ddra[7]) | (dra[7] & ddra[7]);
 
   always @(posedge CLK) begin
     if (!RES_N)
@@ -143,7 +147,7 @@ module mm6532(
     else if (irq_en)
       pa7_irq <= 1'b0;
     else
-      pa7_irq <= pa7_irq | pa7 == pa7_irq_mode;
+      pa7_irq <= pa7_irq | pa[7] == pa7_irq_mode;
   end
 
   always @(posedge CLK) begin
@@ -186,11 +190,11 @@ module mm6532(
       if (ram_en)
         data_out = ramd;
       else if (dra_en)
-        data_out = (PA_IN & ~ddra) | (dra & ddra);
+        data_out = pa;
       else if (ddra_en)
         data_out = ddra;
       else if (drb_en)
-        data_out = (PB_IN & ~ddrb) | (drb & ddrb);
+        data_out = pb;
       else if (ddrb_en)
         data_out = ddrb;
       else if (tim_en)
