@@ -61,57 +61,188 @@ public:
         top_->final();
     }
 
-    void Reset()
+    void Reset(
+        const std::vector<std::tuple<addr_t, data_t>>& ram_vec,
+        const uint8_t cs,
+        const bool rs_n,
+        const bool r_w,
+        const addr_t a,
+        const data_t d_in)
     {
+        // Reset
+        RES_N(0); CLK(0);
+        const auto end_clk = (PERIOD * 2) * 1;
+        for (auto i = decltype(end_clk)(0); i < end_clk; ++i) {
+            if ((i % PERIOD) == 0) {
+                CLK(!CLK());
+            }
+            top_->eval();
+        }
+
+        // Set RAM
+        auto *ram_ptr = MM6532_RAM(top_, mem);
+        for (const auto& d : ram_vec) {
+            ram_ptr[std::get<0>(d)] = std::get<1>(d);
+        }
+
+        // Set register
+        RES_N(1); CLK(1);
+        CS(cs); RS_N(rs_n); R_W(r_w);
+        A(a); D_IN(d_in);
     }
 
     void Run(const int cycles)
     {
+        const auto end_clk = PERIOD * (2 * (cycles + 1) + 1) + time_;
+        for (; time_ < end_clk; ++time_) {
+            // Dump signals
+            if (vcd_file_) {
+                vcd_->dump(time_);
+            }
+
+            // Execute
+            if ((time_ % PERIOD) == 0) {
+                CLK(!CLK());
+                if (verbose_) {
+                    ShowRegister();
+                    ShowRam();
+                }
+            }
+            top_->eval();
+        }
     }
 
-    bool Verify()
+    void SetRam(
+        data_t *ram, const std::vector<std::tuple<addr_t, data_t>>& ram_vec)
+    {
+        constexpr auto DEPTH = 128;
+        std::fill(ram, ram + DEPTH, 0);
+        for (const auto& d : ram_vec) {
+            ram[std::get<0>(d)] = std::get<1>(d);
+        }
+    }
+
+    bool Verify(
+        const std::vector<std::tuple<addr_t, data_t>>& ram_vec,
+        const uint8_t cs,
+        const bool rs_n,
+        const bool r_w,
+        const addr_t a,
+        const data_t d_in,
+        const data_t d_out)
     {
         bool ret = true;
+
+        auto error_log = [](const int e, const int a, const int d = 2) {
+            std::stringstream ret;
+            ret << " (expected " << HexString(e, d)
+                << ", actual " << HexString(a, d) << ")";
+            return ret.str();
+        };
+
+        // Verify register
+        if (CS() != cs) {
+            ret = false;
+            std::cout << "error: CS"
+                      << error_log(cs, CS(), 1) << std::endl;
+        }
+        if (RS_N() != rs_n) {
+            ret = false;
+            std::cout << "error: RS_N"
+                      << error_log(rs_n, RS_N(), 1) << std::endl;
+        }
+        if (R_W() != r_w) {
+            ret = false;
+            std::cout << "error: R/W"
+                      << error_log(r_w, R_W(), 1) << std::endl;
+        }
+        if (A() != a) {
+            ret = false;
+            std::cout << "error: Address"
+                      << error_log(a, A(), 2) << std::endl;
+        }
+        if (D_IN() != d_in) {
+            ret = false;
+            std::cout << "error: Data in"
+                      << error_log(d_in, D_IN(), 2) << std::endl;
+        }
+        if (D_OUT() != d_out) {
+            ret = false;
+            std::cout << "error: Data in"
+                      << error_log(d_out, D_OUT(), 2) << std::endl;
+        }
+
+        // Verify memory
+        constexpr auto RAM_DEPTH = 128;
+        const auto *actual_ram = MM6532_RAM(top_, mem);
+        auto expected_ram = std::make_unique<data_t[]>(RAM_DEPTH);
+        SetRam(expected_ram.get(), ram_vec);
+        for (auto i = decltype(RAM_DEPTH)(0); i < RAM_DEPTH; ++i) {
+            const auto actual = actual_ram[i];
+            const auto expected = expected_ram[i];
+            if (actual != expected) {
+                ret = false;
+                std::cout << "error: RAM[" << HexString(i, 2) << "]"
+                          << error_log(expected, actual)
+                          << std::endl;
+            }
+        }
 
         return ret;
     }
 
     void ShowRegister() const
     {
+        std::cout << "CLK=" << CLK() << " "
+                  << "CS=" << CS() << " "
+                  << "RS_N=" << RS_N() << " "
+                  << "R_W=" << R_W() << " "
+                  << "A=" << HexString(A(), 2) << " "
+                  << "D_IN=" << HexString(D_IN(), 2) << " "
+                  << "D_OUT=" << HexString(D_OUT(), 2) << " "
+                  << std::endl;
     }
 
     void ShowRam() const
     {
+        auto *ram_ptr = MM6532_RAM(top_, mem);
+        for (auto i = 0; i < 128; ++i) {
+            const auto data = ram_ptr[i];
+            if (data != 0x00) {
+                std::cout << HexString(i, 4) << "<=" << HexString(data);
+            }
+        }
+        std::cout << std::endl;
     }
 
     // Getter
-    auto CLK() { return top_->CLK; }
-    auto RES_N() { return top_->RES_N; }
-    auto R_W() { return top_->R_W; }
-    auto CS() { return top_->CS; }
-    auto RS_N() { return top_->RS_N; }
-    auto A() { return top_->A; }
-    auto D_IN() { return top_->D_IN; }
-    auto PA_IN() { return top_->PA_IN; }
-    auto PB_IN() { return top_->PB_IN; }
-    auto IRQ_N() { return top_->IRQ_N; }
-    auto D_OUT() { return top_->D_OUT; }
-    auto PA_OUT() { return top_->PA_OUT; }
-    auto PB_OUT() { return top_->PB_OUT; }
+    bool CLK() { return top_->CLK; }
+    bool RES_N() { return top_->RES_N; }
+    bool R_W() { return top_->R_W; }
+    uint8_t CS() { return top_->CS; }
+    bool RS_N() { return top_->RS_N; }
+    addr_t A() { return top_->A; }
+    data_t D_IN() { return top_->D_IN; }
+    data_t PA_IN() { return top_->PA_IN; }
+    data_t PB_IN() { return top_->PB_IN; }
+    bool IRQ_N() { return top_->IRQ_N; }
+    data_t D_OUT() { return top_->D_OUT; }
+    data_t PA_OUT() { return top_->PA_OUT; }
+    data_t PB_OUT() { return top_->PB_OUT; }
 
-    const auto CLK() const { return top_->CLK; }
-    const auto RES_N() const { return top_->RES_N; }
-    const auto R_W() const { return top_->R_W; }
-    const auto CS() const { return top_->CS; }
-    const auto RS_N() const { return top_->RS_N; }
-    const auto A() const { return top_->A; }
-    const auto D_IN() const { return top_->D_IN; }
-    const auto PA_IN() const { return top_->PA_IN; }
-    const auto PB_IN() const { return top_->PB_IN; }
-    const auto IRQ_N() const { return top_->IRQ_N; }
-    const auto D_OUT() const { return top_->D_OUT; }
-    const auto PA_OUT() const { return top_->PA_OUT; }
-    const auto PB_OUT() const { return top_->PB_OUT; }
+    const bool CLK() const { return top_->CLK; }
+    const bool RES_N() const { return top_->RES_N; }
+    const bool R_W() const { return top_->R_W; }
+    const uint8_t CS() const { return top_->CS; }
+    const bool RS_N() const { return top_->RS_N; }
+    const addr_t A() const { return top_->A; }
+    const data_t D_IN() const { return top_->D_IN; }
+    const data_t PA_IN() const { return top_->PA_IN; }
+    const data_t PB_IN() const { return top_->PB_IN; }
+    const bool IRQ_N() const { return top_->IRQ_N; }
+    const data_t D_OUT() const { return top_->D_OUT; }
+    const data_t PA_OUT() const { return top_->PA_OUT; }
+    const data_t PB_OUT() const { return top_->PB_OUT; }
 
     // Setter
     void CLK(const bool wd) { top_->CLK = wd; }
@@ -149,6 +280,55 @@ int main(int argc, char **argv)
 
     // Read test config yaml file
     const auto test_patterns = YAML::LoadFile("sim_mm6532.yml");
+
+    // Load memory vector from yaml file function
+    auto load_ram = [](const YAML::Node& ram_node) {
+        std::vector<std::tuple<TestBench::addr_t, TestBench::data_t>> ret;
+        for (const auto& ram : ram_node) {
+            const auto addr = ram.first.as<int>();
+            const auto data = ram.second.as<int>();
+            ret.emplace_back(
+                std::tuple<TestBench::addr_t, TestBench::data_t>(addr, data));
+        }
+        return ret;
+    };
+
+    // Run tests from yaml file
+    for (const auto& target : test_patterns) {
+        const auto target_name = target["target"].as<std::string>();
+
+        for (const auto& test : target["tests"]) {
+            const auto comment = test["comment"].as<std::string>();
+
+            // Execute a test pattern
+            const auto& initial = test["initial"];
+            tb->Reset(
+                load_ram(initial["ram"]),
+                initial["reg"]["CS"].as<int>(),
+                initial["reg"]["RS_N"].as<int>(),
+                initial["reg"]["R_W"].as<int>(),
+                initial["reg"]["A"].as<int>(),
+                initial["reg"]["D_IN"].as<int>()
+            );
+            tb->Run(test["cycle"].as<int>());
+
+            // Verify the test
+            const auto& expected = test["expected"];
+            const auto is_valid = tb->Verify(
+                load_ram(expected["ram"]),
+                expected["reg"]["CS"].as<int>(),
+                expected["reg"]["RS_N"].as<int>(),
+                expected["reg"]["R_W"].as<int>(),
+                expected["reg"]["A"].as<int>(),
+                expected["reg"]["D_IN"].as<int>(),
+                expected["reg"]["D_OUT"].as<int>()
+            );
+
+            std::cout << (is_valid ? "Success" : "   Fail") << ": "
+                      << target_name << ": "
+                      << comment << std::endl;
+        }
+    }
 
     return 0;
 }

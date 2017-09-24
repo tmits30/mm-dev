@@ -2,6 +2,63 @@
 # RAM test
 # ------------------------------------------------------------------------------
 
+- target: RAM
+  tests:
+    #
+    # Write
+    #
+    - comment: Write 0xaa to RAM[0]
+      cycle: 2
+      initial:
+        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x00, D_IN: 0xaa}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x00, D_IN: 0xaa, D_OUT: 0xaa}
+        ram: {0x00: 0xaa}
+    - comment: Write 0xaa to RAM[63]
+      cycle: 2
+      initial:
+        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x3f, D_IN: 0xaa}
+        ram: {0x3f: 0x00}
+      expected:
+        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x3f, D_IN: 0xaa, D_OUT: 0xaa}
+        ram: {0x3f: 0xaa}
+    - comment: Write 0xaa to RAM[127]
+      cycle: 2
+      initial:
+        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x7f, D_IN: 0xaa}
+        ram: {0x7f: 0x00}
+      expected:
+        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x7f, D_IN: 0xaa, D_OUT: 0xaa}
+        ram: {0x7f: 0xaa}
+    #
+    # Read
+    #
+    - comment: Read 0xaa from RAM[0]
+      cycle: 2
+      initial:
+        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x00, D_IN: 0xaa}
+        ram: {0x00: 0xaa}
+      expected:
+        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x00, D_IN: 0xaa, D_OUT: 0xaa}
+        ram: {0x00: 0xaa}
+    - comment: Read 0xaa from RAM[63]
+      cycle: 2
+      initial:
+        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x3f, D_IN: 0xaa}
+        ram: {0x3f: 0xaa}
+      expected:
+        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x3f, D_IN: 0xaa, D_OUT: 0xaa}
+        ram: {0x3f: 0xaa}
+    - comment: Read 0xaa from RAM[127]
+      cycle: 2
+      initial:
+        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x7f, D_IN: 0xaa}
+        ram: {0x7f: 0xaa}
+      expected:
+        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x7f, D_IN: 0xaa, D_OUT: 0xaa}
+        ram: {0x7f: 0xaa}
+
 # ------------------------------------------------------------------------------
 # I/O test
 # ------------------------------------------------------------------------------
