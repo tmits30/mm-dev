@@ -10,26 +10,32 @@
     - comment: Write 0xaa to RAM[0]
       cycle: 2
       initial:
-        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x00, D_IN: 0xaa}
+        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x00, D_IN: 0xaa, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x00: 0x00}
       expected:
-        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x00, D_IN: 0xaa, D_OUT: 0xaa}
+        reg: {D_OUT: 0xaa, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x00: 0xaa}
     - comment: Write 0xaa to RAM[63]
       cycle: 2
       initial:
-        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x3f, D_IN: 0xaa}
+        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x3f, D_IN: 0xaa, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x3f: 0x00}
       expected:
-        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x3f, D_IN: 0xaa, D_OUT: 0xaa}
+        reg: {D_OUT: 0xaa, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x3f: 0xaa}
     - comment: Write 0xaa to RAM[127]
       cycle: 2
       initial:
-        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x7f, D_IN: 0xaa}
+        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x7f, D_IN: 0xaa, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x7f: 0x00}
       expected:
-        reg: {CS: 1, RS_N: 0, R_W: 0, A: 0x7f, D_IN: 0xaa, D_OUT: 0xaa}
+        reg: {D_OUT: 0xaa, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x7f: 0xaa}
     #
     # Read
@@ -37,31 +43,174 @@
     - comment: Read 0xaa from RAM[0]
       cycle: 2
       initial:
-        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x00, D_IN: 0xaa}
+        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x00, D_IN: 0xaa, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x00: 0xaa}
       expected:
-        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x00, D_IN: 0xaa, D_OUT: 0xaa}
+        reg: {D_OUT: 0xaa, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x00: 0xaa}
     - comment: Read 0xaa from RAM[63]
       cycle: 2
       initial:
-        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x3f, D_IN: 0xaa}
+        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x3f, D_IN: 0xaa, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x3f: 0xaa}
       expected:
-        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x3f, D_IN: 0xaa, D_OUT: 0xaa}
+        reg: {D_OUT: 0xaa, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x3f: 0xaa}
     - comment: Read 0xaa from RAM[127]
       cycle: 2
       initial:
-        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x7f, D_IN: 0xaa}
+        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x7f, D_IN: 0xaa, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x7f: 0xaa}
       expected:
-        reg: {CS: 1, RS_N: 0, R_W: 1, A: 0x7f, D_IN: 0xaa, D_OUT: 0xaa}
+        reg: {D_OUT: 0xaa, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x7f: 0xaa}
+
 
 # ------------------------------------------------------------------------------
 # I/O test
 # ------------------------------------------------------------------------------
+
+- target: I/O ports
+  tests:
+    #
+    # Write DDR{A,B}
+    #
+    - comment: Write 0xff to DDRA
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x01, D_IN: 0xff, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0xff, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0xff, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Write 0xff to DDRB
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x03, D_IN: 0xff, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0xff, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0xff}
+        ram: {0x00: 0x00}
+    #
+    # Read DDR{A,B}
+    #
+    - comment: Read 0xff from DDRA
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x01, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0xff, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0xff, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0xff, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Read 0xff from DDRB
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x03, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0xff}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0xff, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0xff}
+        ram: {0x00: 0x00}
+    #
+    # Write DR{A,B}
+    #
+    - comment: Write 0xaa to DRA
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x00, D_IN: 0xaa, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0xff, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0xaa, PA_OUT: 0xaa, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0xaa, DDRA: 0xff, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Write 0xaa to DRB
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x02, D_IN: 0xaa, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0xff}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0xaa, PA_OUT: 0x00, PB_OUT: 0xaa, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0xaa, DDRB: 0xff}
+        ram: {0x00: 0x00}
+    #
+    # Read DR{A,B} (DDR{A,B} == 0xff)
+    #
+    - comment: Read 0xaa to DRA (DDRA == 0xff)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x00, D_IN: 0x00, PA_IN: 0x55, PB_IN: 0x00,
+        DRA: 0xaa, DDRA: 0xff, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0xaa, PA_OUT: 0xaa, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0xaa, DDRA: 0xff, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Read 0xaa to DRA (DDRA == 0xff)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x02, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x55,
+        DRA: 0x00, DDRA: 0x00, DRB: 0xaa, DDRB: 0xff}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0xaa, PA_OUT: 0x00, PB_OUT: 0xaa, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0xaa, DDRB: 0xff}
+        ram: {0x00: 0x00}
+    - comment: Read 0x55 to DRA (DDRA == 0x00)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x00, D_IN: 0x00, PA_IN: 0x55, PB_IN: 0x00,
+        DRA: 0xaa, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0x55, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0xaa, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Read 0x55 to DRA (DDRA == 0x00)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x02, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x55,
+        DRA: 0x00, DDRA: 0x00, DRB: 0xaa, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0x55, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0xaa, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Read 0xa5 to DRA (DDRA == 0xf0)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x00, D_IN: 0x00, PA_IN: 0x55, PB_IN: 0x00,
+        DRA: 0xaa, DDRA: 0xf0, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0xa5, PA_OUT: 0xa0, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0xaa, DDRA: 0xf0, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Read 0xa5 to DRA (DDRA == 0xf0)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x02, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x55,
+        DRA: 0x00, DDRA: 0x00, DRB: 0xaa, DDRB: 0xf0}
+        ram: {0x00: 0x00}
+      expected:
+        reg: {D_OUT: 0xa5, PA_OUT: 0x00, PB_OUT: 0xa0, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0xaa, DDRB: 0xf0}
+        ram: {0x00: 0x00}
+
 
 # ------------------------------------------------------------------------------
 # Timer test

@@ -67,7 +67,13 @@ public:
         const bool rs_n,
         const bool r_w,
         const addr_t a,
-        const data_t d_in)
+        const data_t d_in,
+        const data_t pa_in,
+        const data_t pb_in,
+        const data_t dra,
+        const data_t ddra,
+        const data_t drb,
+        const data_t ddrb)
     {
         // Reset
         RES_N(0); CLK(0);
@@ -88,7 +94,8 @@ public:
         // Set register
         RES_N(1); CLK(1);
         CS(cs); RS_N(rs_n); R_W(r_w);
-        A(a); D_IN(d_in);
+        A(a); D_IN(d_in); PA_IN(pa_in); PB_IN(pb_in);
+        DRA(dra); DDRA(ddra); DRB(drb); DDRB(ddrb);
     }
 
     void Run(const int cycles)
@@ -124,12 +131,14 @@ public:
 
     bool Verify(
         const std::vector<std::tuple<addr_t, data_t>>& ram_vec,
-        const uint8_t cs,
-        const bool rs_n,
-        const bool r_w,
-        const addr_t a,
-        const data_t d_in,
-        const data_t d_out)
+        const bool irq_n,
+        const data_t d_out,
+        const data_t pa_out,
+        const data_t pb_out,
+        const data_t dra,
+        const data_t ddra,
+        const data_t drb,
+        const data_t ddrb)
     {
         bool ret = true;
 
@@ -141,36 +150,21 @@ public:
         };
 
         // Verify register
-        if (CS() != cs) {
-            ret = false;
-            std::cout << "error: CS"
-                      << error_log(cs, CS(), 1) << std::endl;
-        }
-        if (RS_N() != rs_n) {
-            ret = false;
-            std::cout << "error: RS_N"
-                      << error_log(rs_n, RS_N(), 1) << std::endl;
-        }
-        if (R_W() != r_w) {
-            ret = false;
-            std::cout << "error: R/W"
-                      << error_log(r_w, R_W(), 1) << std::endl;
-        }
-        if (A() != a) {
-            ret = false;
-            std::cout << "error: Address"
-                      << error_log(a, A(), 2) << std::endl;
-        }
-        if (D_IN() != d_in) {
-            ret = false;
-            std::cout << "error: Data in"
-                      << error_log(d_in, D_IN(), 2) << std::endl;
-        }
-        if (D_OUT() != d_out) {
-            ret = false;
-            std::cout << "error: Data in"
-                      << error_log(d_out, D_OUT(), 2) << std::endl;
-        }
+        auto verify_reg = [&ret, &error_log](
+            const int e, const int a, const std::string name) {
+            if (e != a) {
+                ret = false;
+                std::cout << "error: " << name << error_log(e, a) << std::endl;
+            }
+        };
+        verify_reg(irq_n, IRQ_N(), "IRQ_N");
+        verify_reg(d_out, D_OUT(), "Data");
+        verify_reg(pa_out, PA_OUT(), "Port A");
+        verify_reg(pb_out, PB_OUT(), "Port B");
+        verify_reg(dra, DRA(), "DRA");
+        verify_reg(ddra, DDRA(), "DDRA");
+        verify_reg(drb, DRB(), "DRB");
+        verify_reg(ddrb, DDRB(), "DDRB");
 
         // Verify memory
         constexpr auto RAM_DEPTH = 128;
@@ -200,6 +194,10 @@ public:
                   << "A=" << HexString(A(), 2) << " "
                   << "D_IN=" << HexString(D_IN(), 2) << " "
                   << "D_OUT=" << HexString(D_OUT(), 2) << " "
+                  << "DRA=" << HexString(DRA(), 2) << " "
+                  << "DDRA=" << HexString(DDRA(), 2) << " "
+                  << "DRB=" << HexString(DRB(), 2) << " "
+                  << "DDRB=" << HexString(DDRB(), 2) << " "
                   << std::endl;
     }
 
@@ -229,6 +227,10 @@ public:
     data_t D_OUT() { return top_->D_OUT; }
     data_t PA_OUT() { return top_->PA_OUT; }
     data_t PB_OUT() { return top_->PB_OUT; }
+    data_t DRA() { return MM6532_TOP(top_, dra); }
+    data_t DDRA() { return MM6532_TOP(top_, ddra); }
+    data_t DRB() { return MM6532_TOP(top_, drb); }
+    data_t DDRB() { return MM6532_TOP(top_, ddrb); }
 
     const bool CLK() const { return top_->CLK; }
     const bool RES_N() const { return top_->RES_N; }
@@ -243,6 +245,10 @@ public:
     const data_t D_OUT() const { return top_->D_OUT; }
     const data_t PA_OUT() const { return top_->PA_OUT; }
     const data_t PB_OUT() const { return top_->PB_OUT; }
+    const data_t DRA() const { return MM6532_TOP(top_, dra); }
+    const data_t DDRA() const { return MM6532_TOP(top_, ddra); }
+    const data_t DRB() const { return MM6532_TOP(top_, drb); }
+    const data_t DDRB() const { return MM6532_TOP(top_, ddrb); }
 
     // Setter
     void CLK(const bool wd) { top_->CLK = wd; }
@@ -254,6 +260,10 @@ public:
     void D_IN(const data_t wd) { top_->D_IN = wd; }
     void PA_IN(const data_t wd) { top_->PA_IN = wd; }
     void PB_IN(const data_t wd) { top_->PB_IN = wd; }
+    void DRA(const data_t wd) { MM6532_TOP(top_, dra) = wd; }
+    void DDRA(const data_t wd) { MM6532_TOP(top_, ddra) = wd; }
+    void DRB(const data_t wd) { MM6532_TOP(top_, drb) = wd; }
+    void DDRB(const data_t wd) { MM6532_TOP(top_, ddrb) = wd; }
 
 private:
 
@@ -308,7 +318,13 @@ int main(int argc, char **argv)
                 initial["reg"]["RS_N"].as<int>(),
                 initial["reg"]["R_W"].as<int>(),
                 initial["reg"]["A"].as<int>(),
-                initial["reg"]["D_IN"].as<int>()
+                initial["reg"]["D_IN"].as<int>(),
+                initial["reg"]["PA_IN"].as<int>(),
+                initial["reg"]["PB_IN"].as<int>(),
+                initial["reg"]["DRA"].as<int>(),
+                initial["reg"]["DDRA"].as<int>(),
+                initial["reg"]["DRB"].as<int>(),
+                initial["reg"]["DDRB"].as<int>()
             );
             tb->Run(test["cycle"].as<int>());
 
@@ -316,12 +332,14 @@ int main(int argc, char **argv)
             const auto& expected = test["expected"];
             const auto is_valid = tb->Verify(
                 load_ram(expected["ram"]),
-                expected["reg"]["CS"].as<int>(),
-                expected["reg"]["RS_N"].as<int>(),
-                expected["reg"]["R_W"].as<int>(),
-                expected["reg"]["A"].as<int>(),
-                expected["reg"]["D_IN"].as<int>(),
-                expected["reg"]["D_OUT"].as<int>()
+                expected["reg"]["IRQ_N"].as<int>(),
+                expected["reg"]["D_OUT"].as<int>(),
+                expected["reg"]["PA_OUT"].as<int>(),
+                expected["reg"]["PB_OUT"].as<int>(),
+                expected["reg"]["DRA"].as<int>(),
+                expected["reg"]["DDRA"].as<int>(),
+                expected["reg"]["DRB"].as<int>(),
+                expected["reg"]["DDRB"].as<int>()
             );
 
             std::cout << (is_valid ? "Success" : "   Fail") << ": "
