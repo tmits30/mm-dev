@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <memory>
 
 #include <yaml-cpp/yaml.h>
@@ -98,10 +99,33 @@ public:
         DRA(dra); DDRA(ddra); DRB(drb); DDRB(ddrb);
     }
 
-    void Run(const int cycles)
+    struct Input
     {
-        const auto end_clk = PERIOD * (2 * (cycles + 1) + 1) + time_;
-        for (; time_ < end_clk; ++time_) {
+        uint8_t cs;
+        bool rs_n;
+        bool r_w;
+        addr_t a;
+        data_t d_in;
+        data_t pa_in;
+        data_t pb_in;
+
+        Input(const uint8_t cs, const bool rs_n, const bool r_w, const addr_t a,
+              const data_t d_in, const data_t pa_in, const data_t pb_in) :
+            cs(cs),
+            rs_n(rs_n),
+            r_w(r_w),
+            a(a),
+            d_in(d_in),
+            pa_in(pa_in),
+            pb_in(pb_in)
+        {}
+    };
+
+    void Run(const int cycles, const std::map<int, Input>& inputs)
+    {
+        auto clock = 0;
+        const auto end_clock = PERIOD * (2 * (cycles + 1) + 1) + time_;
+        for (; time_ < end_clock; ++time_) {
             // Dump signals
             if (vcd_file_) {
                 vcd_->dump(time_);
@@ -110,10 +134,24 @@ public:
             // Execute
             if ((time_ % PERIOD) == 0) {
                 CLK(!CLK());
+                clock += CLK();
                 if (verbose_) {
                     ShowRegister();
                     ShowRam();
                 }
+            }
+            top_->eval();
+
+            const auto it = inputs.find(clock);
+            if (it != inputs.end()) {
+                const auto input = it->second;
+                CS(input.cs);
+                RS_N(input.rs_n);
+                R_W(input.r_w);
+                A(input.a);
+                D_IN(input.d_in);
+                PA_IN(input.pa_in);
+                PB_IN(input.pb_in);
             }
             top_->eval();
         }
@@ -326,7 +364,24 @@ int main(int argc, char **argv)
                 initial["reg"]["DRB"].as<int>(),
                 initial["reg"]["DDRB"].as<int>()
             );
-            tb->Run(test["cycle"].as<int>());
+
+            // Run
+            std::map<int, TestBench::Input> inputs;
+            for (const auto& command : test["command"]) {
+                inputs.emplace(
+                    command["clock"].as<int>(),
+                    TestBench::Input(
+                        command["reg"]["CS"].as<int>(),
+                        command["reg"]["RS_N"].as<int>(),
+                        command["reg"]["R_W"].as<int>(),
+                        command["reg"]["A"].as<int>(),
+                        command["reg"]["D_IN"].as<int>(),
+                        command["reg"]["PA_IN"].as<int>(),
+                        command["reg"]["PB_IN"].as<int>()
+                    )
+                );
+            }
+            tb->Run(test["cycle"].as<int>(), inputs);
 
             // Verify the test
             const auto& expected = test["expected"];
