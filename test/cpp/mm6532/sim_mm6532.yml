@@ -216,3 +216,365 @@
 # Timer test
 # ------------------------------------------------------------------------------
 
+- target: Interval timer
+  tests:
+    #
+    # Pre-scale 1T
+    #
+    - comment: Pre-scale 1T 2/5 counts with enable timer interrupt
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1c, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 3
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x03, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x02, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 1T 5/5 counts with enable timer interrupt
+      cycle: 5
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1c, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 6
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x06, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 1T 5/5 counts + 1 clock with enable timer interrupt
+      cycle: 6
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1c, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 7
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x07, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x01, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 1T 5/5 counts + 2 clock with enable timer interrupt
+      cycle: 7
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1c, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 8
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x08, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x02, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    #
+    # Pre-scale 8T
+    #
+    - comment: Pre-scale 8T 2/5 counts with enable timer interrupt
+      cycle: 16
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1d, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 17
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x11, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x02, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 8T 4/5 counts + 7 clock with enable timer interrupt
+      cycle: 39
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1d, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 40
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x28, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 8T 5/5 counts with enable timer interrupt
+      cycle: 40
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1d, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 41
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x29, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 8T 5/5 counts + 1 clock with enable timer interrupt
+      cycle: 41
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1d, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 42
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x2a, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x01, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 8T 5/5 counts + 2 clock with enable timer interrupt
+      cycle: 42
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1d, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 43
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x31, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x02, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    #
+    # Pre-scale 64T
+    #
+    - comment: Pre-scale 64T 2/5 counts with enable timer interrupt
+      cycle: 128
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1e, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 129
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x81, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x02, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 64T 4/5 counts + 63 clock with enable timer interrupt
+      cycle: 319
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1e, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 320
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x3f, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 64T 5/5 counts with enable timer interrupt
+      cycle: 320
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1e, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 321
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x41, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 64T 5/5 counts + 1 clock with enable timer interrupt
+      cycle: 321
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1e, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 322
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x42, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x01, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 64T 5/5 counts + 2 clock with enable timer interrupt
+      cycle: 322
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1e, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 323
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x43, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x02, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    #
+    # Pre-scale 1024T
+    #
+    - comment: Pre-scale 1024T 2/5 counts with enable timer interrupt
+      cycle: 2048
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1f, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 2049
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x81, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x02, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 1024T 4/5 counts + 1023 clock with enable timer interrupt
+      cycle: 5119
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1f, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 5120
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x3f, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 1024T 5/5 counts with enable timer interrupt
+      cycle: 5120
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1f, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 5121
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x41, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 1024T 5/5 counts + 1 clock with enable timer interrupt
+      cycle: 5121
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1f, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 5122
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x42, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x01, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 1024T 5/5 counts + 2 clock with enable timer interrupt
+      cycle: 5122
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1f, D_IN: 0x05, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 5123
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x43, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x02, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    #
+    # Pre-scale 8T (from data sheet)
+    #
+    - comment: Pre-scale 8T 51/52 + 7 clock counts with enable timer interrupt
+      cycle: 415
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1d, D_IN: 0x34, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 416
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x11, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 8T 52/52 counts with enable timer interrupt
+      cycle: 416
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1d, D_IN: 0x34, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 417
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x11, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 8T 52/52 counts + 1 clock with enable timer interrupt
+      cycle: 417
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1d, D_IN: 0x34, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 418
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x11, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x01, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: Pre-scale 8T 52/52 counts + 1 clock with enable timer interrupt
+      cycle: 443
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1d, D_IN: 0x34, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 1
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x08, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 444
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x0c, D_IN: 0x11, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x1b, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
