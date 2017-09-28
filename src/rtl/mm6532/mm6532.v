@@ -205,7 +205,7 @@ module mm6532(
         else
           data_out = tim;
       else if (irq_en)
-        data_out = {tim_irq, pa7_irq, 6'b0};
+        data_out = {tim_irq & tim_irq_en, pa7_irq & pa7_irq_en, 6'b0};
       else
         data_out = 8'h00;
     end
