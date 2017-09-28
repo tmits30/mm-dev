@@ -875,3 +875,147 @@
         reg: {D_OUT: 0x1b, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
         DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
         ram: {0x00: 0x00}
+
+
+# ------------------------------------------------------------------------------
+# Interrupt test
+# ------------------------------------------------------------------------------
+
+- target: Interrupt
+  tests:
+    #
+    # PA7 negative edge-detect with disable PA7 interrupt
+    #
+    - comment: PA7 negative edge-detect with disable PA7 interrupt (PA7=0)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x04, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 3
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x05, D_IN: 0x03, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: PA7 negative edge-detect with disable PA7 interrupt (PA7=1)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x04, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x80, DDRA: 0x80, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 3
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x05, D_IN: 0x03, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x80, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x80, DDRA: 0x80, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    #
+    # PA7 negative edge-detect with enable PA7 interrupt
+    #
+    - comment: PA7 negative edge-detect with enable PA7 interrupt (PA7=0)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x06, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 3
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x05, D_IN: 0x03, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x40, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: PA7 negative edge-detect with enable PA7 interrupt (PA7=1)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x06, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x80, DDRA: 0x80, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 3
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x05, D_IN: 0x03, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x80, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x80, DDRA: 0x80, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    #
+    # PA7 postive edge-detect with disable PA7 interrupt
+    #
+    - comment: PA7 positive edge-detect with disable PA7 interrupt (PA7=0)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x05, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 3
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x05, D_IN: 0x03, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: PA7 positive edge-detect with disable PA7 interrupt (PA7=1)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x05, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x80, DDRA: 0x80, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 3
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x05, D_IN: 0x03, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x80, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x80, DDRA: 0x80, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    #
+    # PA7 positive edge-detect with enable PA7 interrupt
+    #
+    - comment: PA7 positive edge-detect with enable PA7 interrupt (PA7=0)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x07, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 3
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x05, D_IN: 0x03, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x00, PA_OUT: 0x00, PB_OUT: 0x00, IRQ_N: 1,
+        DRA: 0x00, DDRA: 0x00, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    - comment: PA7 positive edge-detect with enable PA7 interrupt (PA7=1)
+      cycle: 2
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x07, D_IN: 0x00, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x80, DDRA: 0x80, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 3
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x05, D_IN: 0x03, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0x40, PA_OUT: 0x80, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x80, DDRA: 0x80, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+    #
+    # Timer interrupt and PA7 positive edge-detect with enable PA7 interrupt
+    #
+    - comment: Timer interrupt and Pre-scale 8T 2/2 counts with disable timer interrupt
+      cycle: 9
+      initial:
+        reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x1d, D_IN: 0x01, PA_IN: 0x00, PB_IN: 0x00,
+        DRA: 0x80, DDRA: 0x80, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
+      command:
+        - clock: 2
+          reg: {CS: 0, RS_N: 1, R_W: 0, A: 0x07, D_IN: 0x02, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 3
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x00, D_IN: 0x03, PA_IN: 0x00, PB_IN: 0x00}
+        - clock: 10
+          reg: {CS: 0, RS_N: 1, R_W: 1, A: 0x05, D_IN: 0x11, PA_IN: 0x00, PB_IN: 0x00}
+      expected:
+        reg: {D_OUT: 0xc0, PA_OUT: 0x80, PB_OUT: 0x00, IRQ_N: 0,
+        DRA: 0x80, DDRA: 0x80, DRB: 0x00, DDRB: 0x00}
+        ram: {0x00: 0x00}
