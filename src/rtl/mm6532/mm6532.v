@@ -149,7 +149,7 @@ module mm6532(
     else if (irq_en)
       pa7_irq <= 1'b0;
     else
-      pa7_irq <= pa7_irq | pa[7] == pa7_irq_mode;
+      pa7_irq <= pa[7] == pa7_irq_mode;
   end
 
   always @(posedge CLK) begin
