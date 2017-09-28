@@ -24,7 +24,7 @@ module mm6532(
                tim_en, irq_en, edc_en;
 
   always @(*) begin
-    {ram_en, dra_en, ddra_en, drb_en, ddrb_en, tim_en} = 6'b0;
+    {ram_en, dra_en, ddra_en, drb_en, ddrb_en, tim_en, irq_en, edc_en} = 8'b0;
     if (CS == 2'b01 && !RS_N)
       ram_en = 1'b1;    // Write/Read RAM
     else begin
