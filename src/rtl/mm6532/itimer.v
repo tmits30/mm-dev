@@ -1,68 +1,66 @@
 module itimer(
-  input        CLK,
-  input        RES_N,
-  input        WE,
-  input [1:0]  MODE,
-  input [7:0]  IN,
-  output [7:0] OUT
+  input            CLK,
+  input            RES_N,
+  input            WE,
+  input [1:0]      PRESCALE_IN,
+  input [7:0]      IN,
+  output reg [7:0] OUT,
+  output reg       INTERRUPT
 );
 
-  localparam C_TIM_0001T = 2'b00;
-  localparam C_TIM_0008T = 2'b01;
-  localparam C_TIM_0064T = 2'b10;
-  localparam C_TIM_1024T = 2'b11;
+  localparam C_PRESCALE_0001T = 2'b00;
+  localparam C_PRESCALE_0008T = 2'b01;
+  localparam C_PRESCALE_0064T = 2'b10;
+  localparam C_PRESCALE_1024T = 2'b11;
 
-  reg [1:0]        mode;
-  reg [9:0]        div_cnt;
-  reg [8:0]        tim_cnt;
-  reg              stop;
+  reg [9:0]        count;
 
   always @(posedge CLK) begin
     if (!RES_N)
-      mode <= C_TIM_0001T;
+      count <= 10'b0;
     else if (WE)
-      mode <= MODE;
-  end
-
-  always @(posedge CLK) begin
-    if (!RES_N)
-      div_cnt <= 10'b0;
-    else if (WE)
-      div_cnt <= 10'b0;
+      count <= 10'b1;
     else
-      div_cnt <= div_cnt + 10'b1;
+      count <= count + 10'b1;
   end
+
+  reg [1:0]        prescale;
+  wire             prescale_out;
 
   always @(posedge CLK) begin
     if (!RES_N)
-      stop <= 1'b0;
+      prescale <= C_PRESCALE_0001T;
     else if (WE)
-      stop <= 1'b0;
-    else if (tim_cnt == 9'b0)
-      stop <= 1'b1;
+      prescale <= PRESCALE_IN;
+    else if (OUT == 8'b0 && prescale_out)
+      prescale <= C_PRESCALE_0001T;
     else
-      stop <= stop;
+      prescale <= prescale;
   end
+
+  assign prescale_out = (prescale == C_PRESCALE_0001T) ||
+                        (prescale == C_PRESCALE_0008T && count[2:0] == 3'b0) ||
+                        (prescale == C_PRESCALE_0064T && count[5:0] == 6'b0) ||
+                        (prescale == C_PRESCALE_1024T && count[9:0] == 10'b0);
 
   always @(posedge CLK) begin
     if (!RES_N)
-      tim_cnt <= 9'b0;
+      OUT <= 8'b0;
     else if (WE)
-      tim_cnt <= {1'b0, IN};
-    else if (stop)
-      tim_cnt <= tim_cnt - 9'b1;
-    else if (mode == C_TIM_0001T)
-      tim_cnt <= tim_cnt - 9'b1;
-    else if (mode == C_TIM_0008T && div_cnt[2:0] == 3'b111)
-      tim_cnt <= tim_cnt - 9'b1;
-    else if (mode == C_TIM_0064T && div_cnt[5:0] == 6'b111111)
-      tim_cnt <= tim_cnt - 9'b1;
-    else if (mode == C_TIM_1024T && div_cnt[9:0] == 10'b1111111111)
-      tim_cnt <= tim_cnt - 9'b1;
+      OUT <= IN - 8'b1;
+    else if (prescale_out)
+      OUT <= OUT - 8'b1;
     else
-      tim_cnt <= tim_cnt;
+      OUT <= OUT;
   end
 
-  assign OUT = tim_cnt[8] ? ~tim_cnt[7:0] + 1 : tim_cnt[7:0];
+  always @(*) begin
+    if (!RES_N)
+      INTERRUPT = 1'b0;
+    else if (OUT == 8'b0 && prescale_out)
+      INTERRUPT = 1'b1;
+    else
+      INTERRUPT = 1'b0;
+  end
 
 endmodule

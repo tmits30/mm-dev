@@ -107,14 +107,16 @@ module mm6532(
   //
 
   wire [7:0]   tim;
+  wire         tim_irq_;
 
   itimer itimer(
-    .CLK   (CLK),
-    .RES_N (RES_N),
-    .WE    (tim_en & !R_W),
-    .MODE  (A[1:0]),
-    .IN    (D_IN),
-    .OUT   (tim)
+    .CLK         (CLK),
+    .RES_N       (RES_N),
+    .WE          (tim_en & !R_W),
+    .PRESCALE_IN (A[1:0]),
+    .IN          (D_IN),
+    .OUT         (tim),
+    .INTERRUPT   (tim_irq_)
   );
 
   // I/O ports
@@ -162,7 +164,7 @@ module mm6532(
   always @(posedge CLK) begin
     if (!RES_N)
       tim_irq <= 1'b0;
-    else if (tim == 8'h00)
+    else if (tim_irq_ && R_W) // TODO: is this correct?
       tim_irq <= 1'b1;
     else if (tim_en)
       tim_irq <= 1'b0;
@@ -198,7 +200,10 @@ module mm6532(
       else if (ddrb_en)
         data_out = ddrb;
       else if (tim_en)
-        data_out = tim;
+        if (tim_irq)
+          data_out = ~tim + 8'b1 - 8'b1;
+        else
+          data_out = tim;
       else if (irq_en)
         data_out = {tim_irq, pa7_irq, 6'b0};
       else
