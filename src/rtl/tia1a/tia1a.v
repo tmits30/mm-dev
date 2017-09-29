@@ -2,6 +2,7 @@
 module tia1a(
   input        MCLK,   // Machine clock
   input        CCLK,   // Color colck
+  input        RES_N,  // For debugging
   input        DEL,    // Color delay input
   input        R_W,    // Read write signal from 6507
   input [3:0]  CS,     // Chip selects
@@ -90,7 +91,7 @@ module tia1a(
       hcount <= 8'h0;
     else if (A == C_TIA_WADDR_RSYNC)
       hcount <= 8'h0; // intended for chip testing purpose
-    else if (hcount == 10'd227)
+    else if (hcount == 8'd227)
       hcount <= 8'h0;
     else
       hcount <= hcount + 8'h1;
@@ -105,6 +106,8 @@ module tia1a(
   //
   // Synchronization
   //
+
+  reg          wsync;
 
   // Wait for sync
   always @(posedge CCLK) begin
@@ -177,14 +180,27 @@ module tia1a(
   wire       dotpfl_, dotpfr_, dotm0_, dotm1_, dotbl_; // temporal dot pixels
   wire       dotpf, dotp0, dotp1, dotm0, dotm1, dotbl; // dot pixels
 
-  assign dotpfl_ = pf[pixelpf];
-  assign dotpfr_ = ctrlpf[0] ? pf[6'd39 - pixelpf] : pf[pixelpf - 6'd20];
+  assign dotpfl_ = pf[pixelpf[4:0]];
+  assign dotpfr_ = dotpfr_func(ctrlpf[0], pf, pixelpf);
   assign dotpf = (pixelpf < 6'd20) ? dotpfl_ : dotpfr_;
+
+  function dotpfr_func(input ref_flag, input [19:0] pf_in, input [5:0] pixel_in);
+    begin
+      if (ref_flag)
+        // dotpfr_func = pf_in[6'd39 - pixel_in];
+        if (pixel_in >= 6'd32)
+          dotpfr_func = pf_in[5'd7 - pixel_in[4:0]];
+        else
+          dotpfr_func = 1'b0;
+      else
+        dotpfr_func = pf_in[pixel_in[4:0] - 5'd20];
+    end
+  endfunction
 
   dotter dotterp0(pixel, posp0, grp0_, nusiz0[2:0], dotp0);
   dotter dotterp1(pixel, posp1, grp1_, nusiz1[2:0], dotp1);
   dotter dotterm0(pixel, posm0, grm0_, nusiz0[2:0], dotm0_);
-  dotter dotterm0(pixel, posm1, grm1_, nusiz1[2:0], dotm1_);
+  dotter dotterm1(pixel, posm1, grm1_, nusiz1[2:0], dotm1_);
   dotter dotterbl(pixel, posbl, grbl_,        3'd0, dotbl_);
 
   assign dotm0 = dotm0_ & enam0;
@@ -233,23 +249,23 @@ module tia1a(
     if (ctrlpf[2]) // Playfield/Ball Priority
       // Above players/missiles
       if (dotp0 || dotm0)
-        colupx <= colup0;
+        colupx = colup0;
       else if (dotp1 || dotm1)
-        colupx <= colup1;
+        colupx = colup1;
       else if (dotpf)
-        colupx <= colupf_;
+        colupx = colupf_;
       else
-        colupx <= colubk;
+        colupx = colubk;
     else
       // Normal
       if (dotpf)
-        colupx <= colupf_;
+        colupx = colupf_;
       else if (dotp0 || dotm0)
-        colupx <= colup0;
+        colupx = colup0;
       else if (dotp1 || dotm1)
-        colupx <= colup1;
+        colupx = colup1;
       else
-        colupx <= colubk;
+        colupx = colubk;
   end
 
   assign LUM = HBLANK ? 3'b0 : colupx[3:1];
@@ -560,6 +576,8 @@ module tia1a(
           C_TIA_WADDR_CXCLR: begin
             // clear collision latches
             cxclr <= 1'b1;
+          end
+          default: begin
           end
         endcase
     end

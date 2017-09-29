@@ -6,7 +6,7 @@ module dotter(
   output      DOT
 );
 
-  objPixelOn (
+  objPixelOn obj_inst (
     .pixelNum (PX),
     .objPos   (POS),
     .objMask  (GR),
