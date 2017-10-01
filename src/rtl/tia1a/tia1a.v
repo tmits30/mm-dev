@@ -178,25 +178,14 @@ module tia1a(
    * and 8 respectively).
    */
 
-  wire       dotpfl_, dotpfr_, dotm0_, dotm1_, dotbl_; // temporal dot pixels
+  wire       dotm0_, dotm1_, dotbl_; // temporal dot pixels
   wire       dotpf, dotp0, dotp1, dotm0, dotm1, dotbl; // dot pixels
 
-  assign dotpfl_ = pf[pixelpf[4:0]];
-  assign dotpfr_ = dotpfr_func(ctrlpf[0], pf, pixelpf);
-  assign dotpf = (pixelpf < 6'd20) ? dotpfl_ : dotpfr_;
+  wire [5:0] pixelpfl, pixelpfr;
 
-  function dotpfr_func(input ref_flag, input [19:0] pf_in, input [5:0] pixel_in);
-    begin
-      if (ref_flag)
-        // dotpfr_func = pf_in[6'd39 - pixel_in];
-        if (pixel_in >= 6'd32)
-          dotpfr_func = pf_in[5'd7 - pixel_in[4:0]];
-        else
-          dotpfr_func = 1'b0;
-      else
-        dotpfr_func = pf_in[pixel_in[4:0] - 5'd20];
-    end
-  endfunction
+  assign pixelpfl = pixelpf;
+  assign pixelpfr = 6'd39 - pixelpf;
+  assign dotpf = (pixelpf < 6'd20) ? pf[pixelpfl[4:0]] : pf[pixelpfr[4:0]];
 
   dotter dotterp0(pixel, posp0, grp0_, nusiz0[2:0], dotp0);
   dotter dotterp1(pixel, posp1, grp1_, nusiz1[2:0], dotp1);
