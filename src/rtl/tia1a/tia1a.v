@@ -366,7 +366,7 @@ module tia1a(
       posbl <= 8'b0; // strobe
       cxclr <= 1'b0;
     end else if (CS[1:0] == 2'b01) begin // TODO: check CS cond
-      if (R_W)
+      if (!R_W)
         case (A)
           C_TIA_WADDR_VSYNC: begin
             // vertical sync set-clear
@@ -580,6 +580,8 @@ module tia1a(
           default: begin
           end
         endcase
+      else
+        ;
     end
   end
 
@@ -588,7 +590,7 @@ module tia1a(
     if (!RES_N) begin
       D_OUT <= 8'h00;
     end else if (CS[1:0] == 2'b01) begin // TODO: check CS cond
-      if (!R_W)
+      if (R_W)
         case (A)
           C_TIA_RADDR_CXM0P: begin
             // read collision M0-P1, M0-P0 (Bit 7,6)
@@ -648,6 +650,8 @@ module tia1a(
           end
           default: D_OUT <= 8'h00;
         endcase
+      else
+        ;
     end
   end
 
