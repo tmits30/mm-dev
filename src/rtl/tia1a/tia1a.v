@@ -44,9 +44,10 @@ module tia1a(
   reg [7:0]    pf0, pf1, pf2;
   wire [19:0]  pf;
 
-  assign pf = {pf0[4], pf0[5], pf0[6], pf0[7], pf1,
-               pf2[0], pf2[1], pf2[2], pf2[3],
-               pf2[4], pf2[5], pf2[6], pf2[7]};
+  assign pf = {pf2,
+               pf1[0], pf1[1], pf1[2], pf1[3],
+               pf1[4], pf1[5], pf1[6], pf1[7],
+               pf0[7:4]};
 
   // audio control
   reg [7:0]    audc0, audc1;
