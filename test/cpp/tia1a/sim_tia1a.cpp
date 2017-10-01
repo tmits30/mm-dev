@@ -404,7 +404,6 @@ public:
     DECL_ACCESSOR(uint8_t, GRM0__REG, TIA1A_TOP(top_, grm0_));     // 8-bit
     DECL_ACCESSOR(uint8_t, GRM1__REG, TIA1A_TOP(top_, grm1_));     // 8-bit
     DECL_ACCESSOR(uint8_t, GRBL__REG, TIA1A_TOP(top_, grbl_));     // 8-bit
-    DECL_ACCESSOR(uint8_t, DOTPFR__REG, TIA1A_TOP(top_, dotpfr_)); // 1-bit
     DECL_ACCESSOR(uint8_t, DOTPF_REG, TIA1A_TOP(top_, dotpf));     // 1-bit
     DECL_ACCESSOR(uint8_t, DOTP0_REG, TIA1A_TOP(top_, dotp0));     // 1-bit
     DECL_ACCESSOR(uint8_t, DOTP1_REG, TIA1A_TOP(top_, dotp1));     // 1-bit
