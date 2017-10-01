@@ -120,7 +120,7 @@ public:
         vcd_(std::make_unique<VerilatedVcdC>()),
         vcd_file_(vcd_file),
         verbose_(verbose),
-        time_(0)
+        vcd_time_(0)
     {
         if (vcd_file_) {
             Verilated::traceEverOn(true);
@@ -157,20 +157,20 @@ public:
     void Run(const int cycles, const std::map<int, Inputs>& inputs)
     {
         constexpr int CCLK_PER_MCLK = 3;
-        auto clock = 0;
-        const auto end_clock = PERIOD * (2 * (cycles + 1) + 1) + time_;
-        for (; time_ < end_clock; ++time_) {
+        int clock = 0;
+        const auto end_time = PERIOD * (2 * (cycles + 1) + 1);
+        for (auto time = decltype(end_time)(0); time < end_time; ++time) {
             // Dump signals
             if (vcd_file_) {
-                vcd_->dump(time_);
+                vcd_->dump(vcd_time_);
             }
 
             // Execute
-            if ((time_ % PERIOD) == 0) {
+            if (((time + 1) % PERIOD) == 0) {
                 CCLK(!CCLK());
                 clock += CCLK();
             }
-            if ((time_ % PERIOD * CCLK_PER_MCLK) == 0) {
+            if (((time + 1) % (PERIOD * CCLK_PER_MCLK)) == 0) {
                 MCLK(!MCLK());
             }
             top_->eval();
@@ -181,6 +181,8 @@ public:
                 SetInputs(inputs);
             }
             top_->eval();
+
+            vcd_time_ += 1;
         }
     }
 
@@ -424,7 +426,7 @@ private:
     const char *vcd_file_;
     const bool verbose_;
 
-    int time_;
+    int vcd_time_;
 
 #undef TIA1A_TOP
 };
