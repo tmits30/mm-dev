@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 #include <map>
 #include <memory>
 
@@ -108,7 +109,9 @@ public:
                 "HMP0", "HMP1", "HMM0", "HMM1", "HMBL",
                 "POSP0", "POSP1", "POSM0", "POSM1", "POSBL",
                 "VDELP0", "VDELP1", "VDELBL",
-                "RESMP0", "RESMP1", "CXCLR", "CXR"
+                "RESMP0", "RESMP1", "CXCLR", "CXR",
+                // Sub registers
+                "HCOUNT", "PIXEL"
             };
         }
     };
@@ -154,9 +157,16 @@ public:
         SetRegisters(regs);
     }
 
-    void Run(const int cycles, const std::map<int, Inputs>& inputs)
+    void Run(const int cycles, const std::map<int, Inputs>& inputs,
+             const std::string& screen_name = "")
     {
         constexpr int CCLK_PER_MCLK = 3;
+
+        std::ofstream screen;
+        if (screen_name.length() > 0) {
+            screen.open(screen_name, std::ios::out | std::ios::binary);
+        }
+
         int clock = 0;
         const auto end_time = PERIOD * (2 * (cycles + 1) + 1);
         for (auto time = decltype(end_time)(0); time < end_time; ++time) {
@@ -183,6 +193,16 @@ public:
             top_->eval();
 
             vcd_time_ += 1;
+
+            if ((HCOUNT_REG() >= 68) && CCLK()) {
+                uint8_t pixel_value = (COL() << 4) | (LUM() << 1);
+                screen.write(
+                    reinterpret_cast<char *>(&pixel_value), sizeof(char));
+            }
+        }
+
+        if (screen_name.length() > 0) {
+            screen.close();
         }
     }
 
@@ -325,6 +345,9 @@ public:
         RESMP1_REG(values("RESMP1"));
         CXCLR_REG(values("CXCLR"));
         CXR_REG(values("CXR"));
+
+        HCOUNT_REG(values("HCOUNT"));
+        PIXEL_REG(values("PIXEL"));
     }
 
     // Getter and Setter
@@ -460,7 +483,12 @@ int main(int argc, char **argv)
                     input["clock"].as<int>(),
                     TestBench::Inputs(input["in"]));
             }
-            tb->Run(test["cycle"].as<int>(), inputs);
+            if (target_name == "Screen") {
+                const auto screen_name = test["screen_name"].as<std::string>();
+                tb->Run(test["cycle"].as<int>(), inputs, screen_name);
+            } else {
+                tb->Run(test["cycle"].as<int>(), inputs);
+            }
 
             // Verify the test
             const auto& expected = test["expected"];
