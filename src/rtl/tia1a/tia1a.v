@@ -184,7 +184,7 @@ module tia1a(
   wire [5:0] pixelpfl, pixelpfr;
 
   assign pixelpfl = pixelpf;
-  assign pixelpfr = 6'd39 - pixelpf;
+  assign pixelpfr = ctrlpf[0] ? (6'd39 - pixelpf) : (pixelpf - 6'd20);
   assign dotpf = (pixelpf < 6'd20) ? pf[pixelpfl[4:0]] : pf[pixelpfr[4:0]];
 
   dotter dotterp0(pixel, posp0, grp0_, nusiz0[2:0], dotp0);
