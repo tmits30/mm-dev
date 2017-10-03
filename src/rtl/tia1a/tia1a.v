@@ -191,7 +191,7 @@ module tia1a(
   dotter dotterp1(pixel, posp1, grp1_, nusiz1[2:0], dotp1);
   dotter dotterm0(pixel, posm0, grm0_, nusiz0[2:0], dotm0_);
   dotter dotterm1(pixel, posm1, grm1_, nusiz1[2:0], dotm1_);
-  dotter dotterbl(pixel, posbl, grbl_,        3'd0, dotbl_);
+  dotter dotterbl(pixel, posbl, grbl_,        3'b0, dotbl_);
 
   assign dotm0 = dotm0_ & enam0;
   assign dotm1 = dotm1_ & enam1;
@@ -242,13 +242,17 @@ module tia1a(
         colupx = colup0;
       else if (dotp1 || dotm1)
         colupx = colup1;
+      else if (dotbl)
+        colupx = colupf;
       else if (dotpf)
         colupx = colupf_;
       else
         colupx = colubk;
     else
       // Normal
-      if (dotpf)
+      if (dotbl)
+        colupx = colupf;
+      else if (dotpf)
         colupx = colupf_;
       else if (dotp0 || dotm0)
         colupx = colup0;
