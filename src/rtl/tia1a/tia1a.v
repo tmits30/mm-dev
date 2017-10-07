@@ -189,9 +189,9 @@ module tia1a(
 
   dotter dotterp0(pixel, posp0, grp0_, nusiz0[2:0], dotp0);
   dotter dotterp1(pixel, posp1, grp1_, nusiz1[2:0], dotp1);
-  dotter dotterm0(pixel, posm0, grm0_, nusiz0[2:0], dotm0_);
-  dotter dotterm1(pixel, posm1, grm1_, nusiz1[2:0], dotm1_);
-  dotter dotterbl(pixel, posbl, grbl_,        3'b0, dotbl_);
+  dotter dotterm0(pixel, resmp0 ? posp0 : posm0, grm0_, nusiz0[2:0], dotm0_);
+  dotter dotterm1(pixel, resmp1 ? posp1 : posm1, grm1_, nusiz1[2:0], dotm1_);
+  dotter dotterbl(pixel, posbl, grbl_, 3'b0, dotbl_);
 
   assign dotm0 = dotm0_ & enam0;
   assign dotm1 = dotm1_ & enam1;
