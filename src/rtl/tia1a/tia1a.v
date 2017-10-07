@@ -271,18 +271,6 @@ module tia1a(
   always @(*) begin
     if (ctrlpf[2]) // Playfield/Ball Priority
       // Above players/missiles
-      if (dotp0 || dotm0)
-        colupx = colup0;
-      else if (dotp1 || dotm1)
-        colupx = colup1;
-      else if (dotbl)
-        colupx = colupf;
-      else if (dotpf)
-        colupx = colupf_;
-      else
-        colupx = colubk;
-    else
-      // Normal
       if (dotbl)
         colupx = colupf;
       else if (dotpf)
@@ -291,6 +279,18 @@ module tia1a(
         colupx = colup0;
       else if (dotp1 || dotm1)
         colupx = colup1;
+      else
+        colupx = colubk;
+    else
+      // Normal
+      if (dotp0 || dotm0)
+        colupx = colup0;
+      else if (dotp1 || dotm1)
+        colupx = colup1;
+      else if (dotbl)
+        colupx = colupf;
+      else if (dotpf)
+        colupx = colupf_;
       else
         colupx = colubk;
   end
