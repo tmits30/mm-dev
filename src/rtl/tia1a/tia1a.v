@@ -60,10 +60,9 @@ module tia1a(
 
   // graphics player
   reg [7:0]    grp0, grp1;
-  reg [7:0]    grp0d, grp1d; // delayed
 
   // graphics (enable) missile 0,1 and ball
-  reg          enam0, enam1, enabl, enabld;
+  reg          enam0, enam1, enabl;
 
   // horizontal motion player 0,1, missile 0,1 and ball
   reg [7:0]    hmp0, hmp1, hmm0, hmm1, hmbl;
@@ -130,6 +129,40 @@ module tia1a(
   assign HBLANK = (hcount < 8'd68);
   assign VSYNC = vsync;
   assign VBLANK = vblank[1];
+
+  //
+  // Delayed registers
+  //
+
+  reg [7:0]    grp0d, grp1d; // delayed GRPx
+  reg          enabld;       // delayed ENABL
+
+  always @(posedge CCLK) begin
+    if (!RES_N)
+      grp0d <= 8'b0;
+    else if (hcount == 8'b0)
+      grp0d <= grp0;
+    else
+      grp0d <= grp0d;
+  end
+
+  always @(posedge CCLK) begin
+    if (!RES_N)
+      grp1d <= 8'b0;
+    else if (hcount == 8'b0)
+      grp1d <= grp1;
+    else
+      grp1d <= grp1d;
+  end
+
+  always @(posedge CCLK) begin
+    if (!RES_N)
+      enabld <= 1'b0;
+    else if (hcount == 8'b0)
+      enabld <= enabl;
+    else
+      enabld <= enabld;
+  end
 
   //
   // Object Graphics
@@ -337,12 +370,9 @@ module tia1a(
       audv1 <= 8'b0;
       grp0 <= 8'b0;
       grp1 <= 8'b0;
-      grp0d <= 8'b0;
-      grp1d <= 8'b0;
       enam0 <= 1'b0;
       enam1 <= 1'b0;
       enabl <= 1'b0;
-      enabld <= 1'b0;
       hmp0 <= 8'b0;
       hmp1 <= 8'b0;
       hmm0 <= 8'b0;
@@ -486,13 +516,10 @@ module tia1a(
           C_TIA_WADDR_GRP0: begin
             // graphics player 0
             grp0 <= D_IN; // MSB first (from left to right)
-            grp0d <= grp0;
           end
           C_TIA_WADDR_GRP1: begin
             // graphics player 1
             grp1 <= D_IN; // MSB first (from left to right)
-            grp1d <= grp1;
-            enabld <= enabl;
           end
           C_TIA_WADDR_ENAM0: begin
             // graphics (enable) missile 0
