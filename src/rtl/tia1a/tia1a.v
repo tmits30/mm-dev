@@ -530,7 +530,7 @@ module tia1a(
             // vertical delay player 0
             vdelp0 <= D_IN[0];
           end
-          C_TIA_WADDR_VDEL01: begin
+          C_TIA_WADDR_VDELP1: begin
             // vertical delay player 1
             vdelp1 <= D_IN[0];
           end
