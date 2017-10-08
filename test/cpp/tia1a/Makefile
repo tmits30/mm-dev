@@ -27,7 +27,10 @@ SIM_MODULE = tia1a
 # Build
 #-------------------------------------------------------------------------------
 
-all: run_sim
+all: run_screen
+
+run_sim: obj_dir/V$(SIM_MODULE)
+	./obj_dir/V$(SIM_MODULE)
 
 obj_dir/V$(SIM_MODULE): sim_$(SIM_MODULE).cpp
 	$(VERILATOR) $(OUTPUT) $(TRACE) $(VFLAGS) \
@@ -35,8 +38,18 @@ obj_dir/V$(SIM_MODULE): sim_$(SIM_MODULE).cpp
 		-I$(MODULE_DIR) $(SIM_MODULE).v --exe $^
 	make -C obj_dir -f V$(SIM_MODULE).mk
 
-run_sim: obj_dir/V$(SIM_MODULE)
-	./obj_dir/V$(SIM_MODULE)
+run_screen: obj_dir/V$(SIM_MODULE) sim_tia1a.yml
+	make run_sim
+	make bin2img
+
+sim_tia1a.yml: $(wildcard tiasm/*.tiasm)
+	python tiasm.py $^ > $@
+
+bin2img:
+	for b in `ls ./*.bin`; do python bin2img.py $${b}; done
 
 clean:
 	rm -rf obj_dir
+
+clean_screen:
+	rm -rf *.bin *.png
