@@ -1,0 +1,18 @@
+#
+# p0_2copy_wide.tiasm
+#
+#	t	y	x	command	value
+	0	0	0	COLUBK	0x90	# dark blue
+	0	0	3	COLUP0	0x9e	# light blue
+	0	0	6	NUSIZ0	0x04	# 2 copies (wide)
+	0	0	148	RESP0			# center of screen
+	0	0	151	VSYNC			# reset input
+	0	80	0	GRP0	0b00011000
+	0	81	0	GRP0	0b00011000
+	0	82	0	GRP0	0b10011001
+	0	83	0	GRP0	0b10111101
+	0	84	0	GRP0	0b10111101
+	0	85	0	GRP0	0b11111111
+	0	86	0	GRP0	0b11111111
+	0	87	0	GRP0	0b10100101
+	0	88	0	GRP0	0b00000000

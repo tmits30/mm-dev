@@ -1,0 +1,18 @@
+#
+# p1_2size.tiasm
+#
+#	t	y	x	command	value
+	0	0	0	COLUBK	0x90	# dark blue
+	0	0	3	COLUP1	0x4e	# pink
+	0	0	6	NUSIZ1	0x05	# double size
+	0	0	148	RESP1			# center of screen
+	0	0	151	VSYNC			# reset input
+	0	80	0	GRP1	0b00011000
+	0	82	0	GRP1	0b00011000
+	0	84	0	GRP1	0b10011001
+	0	86	0	GRP1	0b10111101
+	0	88	0	GRP1	0b10111101
+	0	90	0	GRP1	0b11111111
+	0	92	0	GRP1	0b11111111
+	0	94	0	GRP1	0b10100101
+	0	96	0	GRP1	0b00000000
