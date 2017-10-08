@@ -60,7 +60,7 @@ public:
             return std::get<0>(values_.at(key));
         }
 
-        bool is_set(const std::string& key) const
+        bool IsSet(const std::string& key) const
         {
             return std::get<1>(values_.at(key));
         }
@@ -115,32 +115,28 @@ public:
                 "POSP0", "POSP1", "POSM0", "POSM1", "POSBL",
                 "VDELP0", "VDELP1", "VDELBL",
                 "RESMP0", "RESMP1", "CXCLR", "CXR",
-                // Sub registers
-                "HCOUNT", "PIXEL",
-                "DOTBL", "GRBL"
             };
         }
     };
 
     const int PERIOD = 1;
 
-    TestBench(const char *vcd_file = nullptr, const bool verbose = false) :
+    TestBench(const std::string vcd_file = "") :
         top_(std::make_unique<Vtia1a>("top")),
         vcd_(std::make_unique<VerilatedVcdC>()),
         vcd_file_(vcd_file),
-        verbose_(verbose),
         vcd_time_(0)
     {
-        if (vcd_file_) {
+        if (vcd_file_ != "") {
             Verilated::traceEverOn(true);
             top_->trace(vcd_.get(), 99);
-            vcd_->open(vcd_file_);
+            vcd_->open(vcd_file_.c_str());
         }
     }
 
     ~TestBench()
     {
-        if (vcd_file_) {
+        if (vcd_file_ != "") {
             vcd_->close();
         }
         top_->final();
@@ -150,9 +146,9 @@ public:
     {
         // Reset
         RES_N(0); CCLK(0);
-        const auto end_clk = (PERIOD * 2) * 1;
-        for (auto i = decltype(end_clk)(0); i < end_clk; ++i) {
-            if ((i % PERIOD) == 0) {
+        const auto end_time = (PERIOD * 2) * 1;
+        for (auto time = decltype(end_time)(0); time < end_time; ++time) {
+            if ((time % PERIOD) == 0) {
                 CCLK(!CCLK());
             }
             top_->eval();
@@ -177,7 +173,7 @@ public:
         const auto end_time = PERIOD * (2 * (cycles + 1) + 1);
         for (auto time = decltype(end_time)(0); time < end_time; ++time) {
             // Dump signals
-            if (vcd_file_) {
+            if (vcd_file_ != "") {
                 vcd_->dump(vcd_time_);
             }
 
@@ -191,6 +187,7 @@ public:
             }
             top_->eval();
 
+            // Input data to module
             const auto it = inputs.find(clock);
             if (it != inputs.end()) {
                 const auto inputs = it->second;
@@ -198,13 +195,14 @@ public:
             }
             top_->eval();
 
-            vcd_time_ += 1;
-
+            // Dump pixel to file
             if ((HCOUNT_REG() >= 68) && CCLK()) {
-                uint8_t pixel_value = (COL() << 4) | (LUM() << 1);
-                screen.write(
-                    reinterpret_cast<char *>(&pixel_value), sizeof(char));
+                uint8_t colu = (COL() << 4) | (LUM() << 1);
+                screen.write(reinterpret_cast<char *>(&colu), sizeof(char));
             }
+
+            // Count up timer for VCD
+            vcd_time_ += 1;
         }
 
         if (screen_name.length() > 0) {
@@ -216,22 +214,19 @@ public:
     {
         bool ret = true;
 
-        auto error_log = [](const int e, const int a, const int d = 2) {
-            std::stringstream ret;
-            ret << " (expected " << HexString(e, d)
-                << ", actual " << HexString(a, d) << ")";
-            return ret.str();
-        };
-
         // Verify register
-        auto verify_func = [&ret, &error_log](
-            const std::string name, const ModuleValues& values, const int actual) {
-            if (values.is_set(name)) {
+        auto verify_func = [&ret](
+            const std::string name,
+            const ModuleValues& values,
+            const int actual) {
+            if (values.IsSet(name)) {
                 const auto expected = values(name);
                 if (expected != actual) {
                     ret = false;
                     std::cout << "error: " << name
-                              << error_log(expected, actual) << std::endl;
+                              << " (expected " << HexString(expected)
+                              << ", actual " << HexString(actual) << ")"
+                              << std::endl;
                 }
             }
         };
@@ -287,9 +282,6 @@ public:
         verify_func("RESMP1", regs, RESMP1_REG());
         verify_func("CXCLR", regs, CXCLR_REG());
         verify_func("CXR", regs, CXR_REG());
-
-        verify_func("DOTBL", regs, DOTBL_REG());
-        verify_func("GRBL", regs, GRBL__REG());
 
         return ret;
     }
@@ -358,9 +350,6 @@ public:
         RESMP1_REG(values("RESMP1"));
         CXCLR_REG(values("CXCLR"));
         CXR_REG(values("CXR"));
-
-        HCOUNT_REG(values("HCOUNT"));
-        PIXEL_REG(values("PIXEL"));
     }
 
     // Getter and Setter
@@ -434,23 +423,6 @@ public:
 
     DECL_ACCESSOR(uint8_t, HCOUNT_REG, TIA1A_TOP(top_, hcount));   // 8-bit
     DECL_ACCESSOR(uint8_t, PIXEL_REG, TIA1A_TOP(top_, pixel));     // 8-bit
-    DECL_ACCESSOR(uint8_t, WSYNC_REG, TIA1A_TOP(top_, wsync));     // 1-bit
-    DECL_ACCESSOR(uint8_t, GRP0__REG, TIA1A_TOP(top_, grp0_));     // 8-bit
-    DECL_ACCESSOR(uint8_t, GRP1__REG, TIA1A_TOP(top_, grp1_));     // 8-bit
-    DECL_ACCESSOR(uint8_t, GRM0__REG, TIA1A_TOP(top_, grm0_));     // 8-bit
-    DECL_ACCESSOR(uint8_t, GRM1__REG, TIA1A_TOP(top_, grm1_));     // 8-bit
-    DECL_ACCESSOR(uint8_t, GRBL__REG, TIA1A_TOP(top_, grbl_));     // 8-bit
-    DECL_ACCESSOR(uint8_t, DOTPF_REG, TIA1A_TOP(top_, dotpf));     // 1-bit
-    DECL_ACCESSOR(uint8_t, DOTP0_REG, TIA1A_TOP(top_, dotp0));     // 1-bit
-    DECL_ACCESSOR(uint8_t, DOTP1_REG, TIA1A_TOP(top_, dotp1));     // 1-bit
-    DECL_ACCESSOR(uint8_t, DOTM0_REG, TIA1A_TOP(top_, dotm0));     // 1-bit
-    DECL_ACCESSOR(uint8_t, DOTM1_REG, TIA1A_TOP(top_, dotm1));     // 1-bit
-    DECL_ACCESSOR(uint8_t, DOTBL_REG, TIA1A_TOP(top_, dotbl));     // 1-bit
-    DECL_ACCESSOR(uint8_t, COLUPF__REG, TIA1A_TOP(top_, colupf_)); // 8-bit
-    DECL_ACCESSOR(uint8_t, COLUPX_REG, TIA1A_TOP(top_, colupx));   // 8-bit
-    DECL_ACCESSOR(uint8_t, INPTD_REG, TIA1A_TOP(top_, inptd));     // 4-bit
-    DECL_ACCESSOR(uint8_t, INPTL__REG, TIA1A_TOP(top_, inptl_));   // 2-bit
-    DECL_ACCESSOR(uint8_t, INPTL_REG, TIA1A_TOP(top_, inptl));     // 2-bit
 
 #undef DECL_ACCESSOR
 
@@ -458,9 +430,7 @@ private:
 
     std::unique_ptr<Vtia1a> top_;
     std::unique_ptr<VerilatedVcdC> vcd_;
-    const char *vcd_file_;
-    const bool verbose_;
-
+    const std::string vcd_file_;
     int vcd_time_;
 
 #undef TIA1A_TOP
