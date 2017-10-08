@@ -45,22 +45,27 @@ public:
         {
             // Initialize to zero
             for (const auto& name : names) {
-                values_.emplace(name, 0);
+                values_.emplace(name, std::make_tuple(0, false));
             }
             // Set values from yaml
             for (const auto& node : nodes) {
                 const auto& name = node.first.as<std::string>();
                 const auto& value = node.second.as<value_type>();
-                values_[name] = value;
+                values_[name] = std::make_tuple(value, true);
             }
         }
 
         value_type operator()(const std::string& name) const
         {
-            return values_.at(name);
+            return std::get<0>(values_.at(name));
         }
 
-        std::map<std::string, value_type> values_;
+        bool is_set(const std::string& name) const
+        {
+            return std::get<1>(values_.at(name));
+        }
+
+        std::map<std::string, std::tuple<value_type, bool>> values_;
     };
 
     struct Inputs : public ModuleValues
@@ -111,7 +116,8 @@ public:
                 "VDELP0", "VDELP1", "VDELBL",
                 "RESMP0", "RESMP1", "CXCLR", "CXR",
                 // Sub registers
-                "HCOUNT", "PIXEL"
+                "HCOUNT", "PIXEL",
+                "DOTBL", "GRBL"
             };
         }
     };
@@ -219,64 +225,71 @@ public:
 
         // Verify register
         auto verify_func = [&ret, &error_log](
-            const int e, const int a, const std::string name) {
-            if (e != a) {
-                ret = false;
-                std::cout << "error: " << name << error_log(e, a) << std::endl;
+            const std::string name, const ModuleValues& values, const int actual) {
+            if (values.is_set(name)) {
+                const auto expected = values(name);
+                if (expected != actual) {
+                    ret = false;
+                    std::cout << "error: " << name
+                              << error_log(expected, actual) << std::endl;
+                }
             }
         };
 
         // For outputs
-        verify_func(outputs("HSYNC"), HSYNC(), "HSYNC");
-        verify_func(outputs("HBLANK"), HBLANK(), "HBLANK");
-        verify_func(outputs("VSYNC"), VSYNC(), "VSYNC");
-        verify_func(outputs("VBLANK"), VBLANK(), "VBLANK");
-        verify_func(outputs("RDY"), RDY(), "RDY");
-        verify_func(outputs("LUM"), LUM(), "LUM");
-        verify_func(outputs("COL"), COL(), "COL");
-        verify_func(outputs("AUD"), AUD(), "AUD");
-        verify_func(outputs("D_OUT"), D_OUT(), "D_OUT");
+        verify_func("HSYNC", outputs, HSYNC());
+        verify_func("HBLANK", outputs, HBLANK());
+        verify_func("VSYNC", outputs, VSYNC());
+        verify_func("VBLANK", outputs, VBLANK());
+        verify_func("RDY", outputs, RDY());
+        verify_func("LUM", outputs, LUM());
+        verify_func("COL", outputs, COL());
+        verify_func("AUD", outputs, AUD());
+        verify_func("D_OUT", outputs, D_OUT());
 
         //For registers
-        verify_func(regs("VSYNC"), VSYNC_REG(), "VSYNC");
-        verify_func(regs("VBLANK"), VBLANK_REG(), "VBLANK");
-        verify_func(regs("NUSIZ0"), NUSIZ0_REG(), "NUSIZ0");
-        verify_func(regs("NUSIZ1"), NUSIZ1_REG(), "NUSIZ1");
-        verify_func(regs("COLUP0"), COLUP0_REG(), "COLUP0");
-        verify_func(regs("COLUP1"), COLUP1_REG(), "COLUP1");
-        verify_func(regs("COLUPF"), COLUPF_REG(), "COLUPF");
-        verify_func(regs("COLUBK"), COLUBK_REG(), "COLUBK");
-        verify_func(regs("CTRLPF"), CTRLPF_REG(), "CTRLPF");
-        verify_func(regs("REFP0"), REFP0_REG(), "REFP0");
-        verify_func(regs("REFP1"), REFP1_REG(), "REFP1");
-        verify_func(regs("PF0"), PF0_REG(), "PF0");
-        verify_func(regs("PF1"), PF1_REG(), "PF1");
-        verify_func(regs("PF2"), PF2_REG(), "PF2");
-        verify_func(regs("GRP0"), GRP0_REG(), "GRP0");
-        verify_func(regs("GRP1"), GRP1_REG(), "GRP1");
-        verify_func(regs("GRP0D"), GRP0D_REG(), "GRP0D");
-        verify_func(regs("GRP1D"), GRP1D_REG(), "GRP1D");
-        verify_func(regs("ENAM0"), ENAM0_REG(), "ENAM0");
-        verify_func(regs("ENAM1"), ENAM1_REG(), "ENAM1");
-        verify_func(regs("ENABL"), ENABL_REG(), "ENABL");
-        verify_func(regs("ENABLD"), ENABLD_REG(), "ENABLD");
-        verify_func(regs("HMP0"), HMP0_REG(), "HMP0");
-        verify_func(regs("HMP1"), HMP1_REG(), "HMP1");
-        verify_func(regs("HMM0"), HMM0_REG(), "HMM0");
-        verify_func(regs("HMM1"), HMM1_REG(), "HMM1");
-        verify_func(regs("HMBL"), HMBL_REG(), "HMBL");
-        verify_func(regs("POSP0"), POSP0_REG(), "POSP0");
-        verify_func(regs("POSP1"), POSP1_REG(), "POSP1");
-        verify_func(regs("POSM0"), POSM0_REG(), "POSM0");
-        verify_func(regs("POSM1"), POSM1_REG(), "POSM1");
-        verify_func(regs("POSBL"), POSBL_REG(), "POSBL");
-        verify_func(regs("VDELP0"), VDELP0_REG(), "VDELP0");
-        verify_func(regs("VDELP1"), VDELP1_REG(), "VDELP1");
-        verify_func(regs("VDELBL"), VDELBL_REG(), "VDELBL");
-        verify_func(regs("RESMP0"), RESMP0_REG(), "RESMP0");
-        verify_func(regs("RESMP1"), RESMP1_REG(), "RESMP1");
-        verify_func(regs("CXCLR"), CXCLR_REG(), "CXCLR");
-        verify_func(regs("CXR"), CXR_REG(), "CXR");
+        verify_func("VSYNC", regs, VSYNC_REG());
+        verify_func("VBLANK", regs, VBLANK_REG());
+        verify_func("NUSIZ0", regs, NUSIZ0_REG());
+        verify_func("NUSIZ1", regs, NUSIZ1_REG());
+        verify_func("COLUP0", regs, COLUP0_REG());
+        verify_func("COLUP1", regs, COLUP1_REG());
+        verify_func("COLUPF", regs, COLUPF_REG());
+        verify_func("COLUBK", regs, COLUBK_REG());
+        verify_func("CTRLPF", regs, CTRLPF_REG());
+        verify_func("REFP0", regs, REFP0_REG());
+        verify_func("REFP1", regs, REFP1_REG());
+        verify_func("PF0", regs, PF0_REG());
+        verify_func("PF1", regs, PF1_REG());
+        verify_func("PF2", regs, PF2_REG());
+        verify_func("GRP0" , regs, GRP0_REG());
+        verify_func("GRP1" , regs, GRP1_REG());
+        verify_func("GRP0D", regs, GRP0D_REG());
+        verify_func("GRP1D", regs, GRP1D_REG());
+        verify_func("ENAM0", regs, ENAM0_REG());
+        verify_func("ENAM1", regs, ENAM1_REG());
+        verify_func("ENABL", regs, ENABL_REG());
+        verify_func("ENABLD", regs, ENABLD_REG());
+        verify_func("HMP0", regs, HMP0_REG());
+        verify_func("HMP1", regs, HMP1_REG());
+        verify_func("HMM0", regs, HMM0_REG());
+        verify_func("HMM1", regs, HMM1_REG());
+        verify_func("HMBL", regs, HMBL_REG());
+        verify_func("POSP0", regs, POSP0_REG());
+        verify_func("POSP1", regs, POSP1_REG());
+        verify_func("POSM0", regs, POSM0_REG());
+        verify_func("POSM1", regs, POSM1_REG());
+        verify_func("POSBL", regs, POSBL_REG());
+        verify_func("VDELP0", regs, VDELP0_REG());
+        verify_func("VDELP1", regs, VDELP1_REG());
+        verify_func("VDELBL", regs, VDELBL_REG());
+        verify_func("RESMP0", regs, RESMP0_REG());
+        verify_func("RESMP1", regs, RESMP1_REG());
+        verify_func("CXCLR", regs, CXCLR_REG());
+        verify_func("CXR", regs, CXR_REG());
+
+        verify_func("DOTBL", regs, DOTBL_REG());
+        verify_func("GRBL", regs, GRBL__REG());
 
         return ret;
     }
