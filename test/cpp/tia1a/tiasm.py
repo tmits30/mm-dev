@@ -86,13 +86,14 @@ class TIAssembler(object):
         self.vblank = vblank
         self.overscan = overscan
 
-        code, expected = self.read(self.filename)
+        code, initial, expected = self.read(self.filename)
         self.code = code
+        self.initial = initial
         self.expected = expected
         self.asm = self.assemble(self.code)
 
     def read(self, filename):
-        code, expected = [], {}
+        code, initial, expected = [], {}, {}
         with open(filename, 'r') as fh:
             rows = [r.split() for r in fh]
             for i, line in enumerate(rows):
@@ -104,12 +105,15 @@ class TIAssembler(object):
                 if len(row) == 0:
                     continue
 
-                if 'expected' in row[0]:
+                if 'initial' in row[0] or 'expected' in row[0]:
                     tag = row[1].replace(':', '').lower()
                     key = row[2].replace(':', '').upper()
                     value = eval(row[3])
                     value = value << 6 if 0 < value <= 3 else value
-                    expected[key] = (tag, value)
+                    if row[0] == 'initial':
+                        initial[key] = (tag, value)
+                    else:
+                        expected[key] = (tag, value)
                 else:
                     if not len(row) in [4, 5]:
                         raise ValueError(
@@ -118,7 +122,7 @@ class TIAssembler(object):
                     data = eval(row[4]) if len(row) > 4 else 0
                     code.append([int(x) for x in row[:3]] + [row[3], data])
         code = sorted(code, key=lambda x: self.get_clock(*x[:3]))
-        return code, expected
+        return code, initial, expected
 
     def get_clock(self, t, y, x):
         return self.height * self.width * t + self.width * y + x
@@ -161,6 +165,15 @@ class TIAssembler(object):
             inputs.append('  in: { %s }' % (in_data))
         inputs = ('\n' + ' ' * 8).join(inputs)
 
+        # Initial register
+        initial_reg = []
+        if self.initial:
+            for key, (tag, value) in self.initial.items():
+                if tag == 'reg':
+                    initial_reg.append('%s: 0x%02x' % (key, value))
+        initial_reg = '{ ' + ', '.join(initial_reg) + ' }' \
+                      if len(initial_reg) else '{}'
+
         # Expected register
         expected_reg, expected_out = [], []
         if self.expected:
@@ -169,8 +182,10 @@ class TIAssembler(object):
                     expected_reg.append('%s: 0x%02x' % (key, value))
                 elif tag == 'out':
                     expected_out.append('%s: 0x%02x' % (key, value))
-        expected_reg = '{ ' + ', '.join(expected_reg) + ' }'
-        expected_out = '{ ' + ', '.join(expected_out) + ' }'
+        expected_reg = '{ ' + ', '.join(expected_reg) + ' }' \
+                       if len(expected_reg) else '{}'
+        expected_out = '{ ' + ', '.join(expected_out) + ' }' \
+                       if len(expected_out) else '{}'
 
         # YAML format
         yml_str = string.Template(
@@ -181,7 +196,7 @@ class TIAssembler(object):
       screen_name: $screen_name
       cycle: $cycle
       initial:
-        reg: {  }
+        reg: $initial_reg
       inputs:
         $inputs
       expected:
@@ -190,7 +205,7 @@ class TIAssembler(object):
 """
         ).substitute(
             comment=yml_comment, screen_name=screen_name,
-            cycle=cycle, inputs=inputs,
+            cycle=cycle, inputs=inputs, initial_reg=initial_reg,
             expected_reg=expected_reg, expected_out=expected_out)
         return yml_str[1:-1] # remove head and foot new lines
 
