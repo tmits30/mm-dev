@@ -41,28 +41,28 @@ public:
         using value_type = int;
 
         ModuleValues(
-            const std::vector<std::string>& names, const YAML::Node& nodes)
+            const std::vector<std::string>& keys, const YAML::Node& nodes)
         {
             // Initialize to zero
-            for (const auto& name : names) {
-                values_.emplace(name, std::make_tuple(0, false));
+            for (const auto& key : keys) {
+                values_.emplace(key, std::make_tuple(0, false));
             }
             // Set values from yaml
             for (const auto& node : nodes) {
-                const auto& name = node.first.as<std::string>();
+                const auto& key = node.first.as<std::string>();
                 const auto& value = node.second.as<value_type>();
-                values_[name] = std::make_tuple(value, true);
+                values_[key] = std::make_tuple(value, true);
             }
         }
 
-        value_type operator()(const std::string& name) const
+        value_type operator()(const std::string& key) const
         {
-            return std::get<0>(values_.at(name));
+            return std::get<0>(values_.at(key));
         }
 
-        bool is_set(const std::string& name) const
+        bool is_set(const std::string& key) const
         {
-            return std::get<1>(values_.at(name));
+            return std::get<1>(values_.at(key));
         }
 
         std::map<std::string, std::tuple<value_type, bool>> values_;
@@ -71,10 +71,10 @@ public:
     struct Inputs : public ModuleValues
     {
         Inputs(const YAML::Node& nodes) :
-            ModuleValues(GetNames(), nodes)
+            ModuleValues(GetKeys(), nodes)
         {}
 
-        const std::vector<std::string> GetNames() const
+        const std::vector<std::string> GetKeys() const
         {
             return {
                 "DEL", "R_W", "CS", "A", "I", "D_IN"
@@ -85,10 +85,10 @@ public:
     struct Outputs : public ModuleValues
     {
         Outputs(const YAML::Node& nodes) :
-            ModuleValues(GetNames(), nodes)
+            ModuleValues(GetKeys(), nodes)
         {}
 
-        const std::vector<std::string> GetNames() const
+        const std::vector<std::string> GetKeys() const
         {
             return {
                 "HSYNC", "HBLANK", "VSYNC", "VBLANK",
@@ -100,10 +100,10 @@ public:
     struct Registers : public ModuleValues
     {
         Registers(const YAML::Node& nodes) :
-            ModuleValues(GetNames(), nodes)
+            ModuleValues(GetKeys(), nodes)
         {}
 
-        const std::vector<std::string> GetNames() const
+        const std::vector<std::string> GetKeys() const
         {
             return {
                 "VSYNC", "VBLANK", "NUSIZ0", "NUSIZ1",
