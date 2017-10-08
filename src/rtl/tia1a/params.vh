@@ -66,3 +66,19 @@ localparam C_TIA_RADDR_INPT2  = 6'h0a; // read pot port
 localparam C_TIA_RADDR_INPT3  = 6'h0b; // read pot port
 localparam C_TIA_RADDR_INPT4  = 6'h0c; // read input
 localparam C_TIA_RADDR_INPT5  = 6'h0d; // read input
+
+//------------------------------------------------------------------------------
+// Common function
+//------------------------------------------------------------------------------
+
+function [3:0] reverse4(input [3:0] in);
+  begin
+    reverse4 = {in[0], in[1], in[2], in[3]};
+  end
+endfunction
+
+function [7:0] reverse8(input [7:0] in);
+  begin
+    reverse8 = {in[0], in[1], in[2], in[3], in[4], in[5], in[6], in[7]};
+  end
+endfunction

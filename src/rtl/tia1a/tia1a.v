@@ -44,10 +44,7 @@ module tia1a(
   reg [7:0]    pf0, pf1, pf2;
   wire [19:0]  pf;
 
-  assign pf = {pf2,
-               pf1[0], pf1[1], pf1[2], pf1[3],
-               pf1[4], pf1[5], pf1[6], pf1[7],
-               pf0[7:4]};
+  assign pf = {pf2, reverse8(pf1), pf0[7:4]};
 
   // audio control
   reg [7:0]    audc0, audc1;
@@ -175,7 +172,7 @@ module tia1a(
     begin
       if (refp)
         // reflection graphics
-        grpx = {gr[0], gr[1], gr[2], gr[3], gr[4], gr[5], gr[6], gr[7]};
+        grpx = reverse8(gr);
       else
         grpx = gr;
     end
