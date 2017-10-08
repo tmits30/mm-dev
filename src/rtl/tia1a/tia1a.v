@@ -89,7 +89,7 @@ module tia1a(
   always @(posedge CCLK) begin
     if (!RES_N)
       hcount <= 8'h0;
-    else if (CS[1:0] == 2'b1 && A == C_TIA_WADDR_RSYNC)
+    else if (CS[1:0] == 2'b1 && R_W == 0 && A == C_TIA_WADDR_RSYNC)
       hcount <= 8'h0; // intended for chip testing purpose
     else if (hcount == 8'd227)
       hcount <= 8'h0;
@@ -113,7 +113,7 @@ module tia1a(
   always @(posedge CCLK) begin
     if (!RES_N)
       wsync <= 1'b0;
-    else if (CS[1:0] == 2'b1 && A == C_TIA_WADDR_WSYNC)
+    else if (CS[1:0] == 2'b1 && R_W == 0 && A == C_TIA_WADDR_WSYNC)
       wsync <= 1'b1;
     else if (hcount == 8'd0)
       wsync <= 1'b0;
