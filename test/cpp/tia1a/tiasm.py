@@ -4,8 +4,8 @@ import csv
 from collections import OrderedDict
 import glob
 import os
-import string
 import sys
+import yaml
 
 
 class TIAssembler(object):
@@ -143,71 +143,62 @@ class TIAssembler(object):
 
     def to_yaml(self):
         name = os.path.splitext(os.path.basename(self.filename))[0]
-        yml_comment = name
+        test_comment = name
         screen_name = name + '.bin'
         cycle = self.get_clock(self.code[-1][0], self.height, 0)
 
         # Input commands
         inputs = []
         for a, c in zip(self.asm, self.code):
-            in_data = OrderedDict([
-                ('DEL', 0),
-                ('R_W', a['r_w'] == 'r'),
-                ('CS', 1),
-                ('A', a['addr']),
-                ('I', 0),
-                ('D_IN', a['data']),
-            ])
-            in_data = ', '.join(
-                ['%s: 0x%02x' % (k, v) for k, v in in_data.items()])
-            comment = ' '.join(str(x) for x in c)
-            inputs.append('- clock: %d # %s' % (a['clock'], comment))
-            inputs.append('  in: { %s }' % (in_data))
-        inputs = ('\n' + ' ' * 8).join(inputs)
+            inputs.append({
+                'clock': a['clock'],
+                'in': {
+                    'DEL': 0,
+                    'R_W': int(a['r_w'] == 'r'),
+                    'CS': 1,
+                    'A': a['addr'],
+                    'I': 0,
+                    'D_IN': a['data'],
+                }
+            })
 
         # Initial register
-        initial_reg = []
+        initial_reg = {}
         if self.initial:
             for key, (tag, value) in self.initial.items():
                 if tag == 'reg':
-                    initial_reg.append('%s: 0x%02x' % (key, value))
-        initial_reg = '{ ' + ', '.join(initial_reg) + ' }' \
-                      if len(initial_reg) else '{}'
+                    initial_reg[key] = value
 
         # Expected register
-        expected_reg, expected_out = [], []
+        expected_reg, expected_out = {}, {}
         if self.expected:
             for key, (tag, value) in self.expected.items():
                 if tag == 'reg':
-                    expected_reg.append('%s: 0x%02x' % (key, value))
+                    expected_reg[key] = value
                 elif tag == 'out':
-                    expected_out.append('%s: 0x%02x' % (key, value))
-        expected_reg = '{ ' + ', '.join(expected_reg) + ' }' \
-                       if len(expected_reg) else '{}'
-        expected_out = '{ ' + ', '.join(expected_out) + ' }' \
-                       if len(expected_out) else '{}'
+                    expected_out[key] = value
 
         # YAML format
-        yml_str = string.Template(
-"""
-- target: Screen
-  tests:
-    - comment: $comment
-      screen_name: $screen_name
-      cycle: $cycle
-      initial:
-        reg: $initial_reg
-      inputs:
-        $inputs
-      expected:
-        reg: $expected_reg
-        out: $expected_out
-"""
-        ).substitute(
-            comment=yml_comment, screen_name=screen_name,
-            cycle=cycle, inputs=inputs, initial_reg=initial_reg,
-            expected_reg=expected_reg, expected_out=expected_out)
-        return yml_str[1:-1] # remove head and foot new lines
+        yml_str = [{
+            'target': 'Screen',
+            'tests': [
+                {
+                    'comment': test_comment,
+                    'screen_name': screen_name,
+                    'cycle': cycle,
+                    'initial': {
+                        'reg': initial_reg,
+                    },
+                    'inputs': inputs,
+                    'expected': {
+                        'reg': expected_reg,
+                        'out': expected_out,
+                    }
+                },
+            ]
+        }]
+
+        return yaml.dump(yml_str)
 
 
 if __name__ == '__main__':
