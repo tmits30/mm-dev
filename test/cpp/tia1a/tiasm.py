@@ -93,27 +93,28 @@ class TIAssembler(object):
         self.asm = self.assemble(self.code)
 
     def read(self, filename):
-        code, initial, expected = [], {}, {}
+        code = []
+        initial = {'reg': {}}
+        expected = {'reg': {}, 'out': {}}
         with open(filename, 'r') as fh:
             rows = [r.split() for r in fh]
             for i, line in enumerate(rows):
                 try:
+                    # Remove comment part from '#'
                     row = line[:['#' in x for x in line].index(True)]
                 except:
                     row = line
-
                 if len(row) == 0:
                     continue
-
                 if 'initial' in row[0] or 'expected' in row[0]:
-                    tag = row[1].replace(':', '').lower()
-                    key = row[2].replace(':', '').upper()
+                    tag = row[1].replace(':', '').lower() # 'reg' or 'out'
+                    key = row[2].replace(':', '').upper() # TIA command (register)
                     value = eval(row[3])
                     value = value << 6 if 0 < value <= 3 else value
                     if row[0] == 'initial':
-                        initial[key] = (tag, value)
+                        initial[tag][key] = value
                     else:
-                        expected[key] = (tag, value)
+                        expected[tag][key] = value
                 else:
                     if not len(row) in [4, 5]:
                         raise ValueError(
@@ -162,22 +163,6 @@ class TIAssembler(object):
                 }
             })
 
-        # Initial register
-        initial_reg = {}
-        if self.initial:
-            for key, (tag, value) in self.initial.items():
-                if tag == 'reg':
-                    initial_reg[key] = value
-
-        # Expected register
-        expected_reg, expected_out = {}, {}
-        if self.expected:
-            for key, (tag, value) in self.expected.items():
-                if tag == 'reg':
-                    expected_reg[key] = value
-                elif tag == 'out':
-                    expected_out[key] = value
-
         # YAML format
         yml_str = [{
             'target': 'Screen',
@@ -187,12 +172,12 @@ class TIAssembler(object):
                     'screen_name': screen_name,
                     'cycle': cycle,
                     'initial': {
-                        'reg': initial_reg,
+                        'reg': self.initial['reg'],
                     },
                     'inputs': inputs,
                     'expected': {
-                        'reg': expected_reg,
-                        'out': expected_out,
+                        'reg': self.expected['reg'],
+                        'out': self.expected['out'],
                     }
                 },
             ]
