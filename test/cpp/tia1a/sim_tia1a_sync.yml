@@ -83,8 +83,6 @@
           RDY: 0x0, HSYNC: 0x0, HBLANK: 0x0, VSYNC: 0x0, VBLANK: 0x0,
           LUM: 0x0, COL: 0x0, AUD: 0x0, D_OUT: 0x00
         }
-- target: WSYNC
-  tests:
     - comment: WSYNC at hcount=99 and step 129 color clock
       cycle: 228
       initial:
@@ -160,8 +158,6 @@
           RDY: 0x1, HSYNC: 0x0, HBLANK: 0x1, VSYNC: 0x0, VBLANK: 0x0,
           LUM: 0x0, COL: 0x0, AUD: 0x0, D_OUT: 0x80
         }
-- target: INPT0
-  tests:
     - comment: Input port 0 with VSYNC[7] (dumped)
       cycle: 6
       initial:
@@ -212,8 +208,6 @@
           RDY: 0x1, HSYNC: 0x0, HBLANK: 0x1, VSYNC: 0x0, VBLANK: 0x0,
           LUM: 0x0, COL: 0x0, AUD: 0x0, D_OUT: 0x80
         }
-- target: INPT4
-  tests:
     - comment: Input port 4 with VBLANK[6] (latched)
       cycle: 6
       initial:
