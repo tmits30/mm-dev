@@ -299,35 +299,25 @@ module tia1a(
   // Input ports
   //
 
-  reg [3:0] inptd; // Dumped input
-  reg [1:0] inptl_; // Latched input
-
-  wire [1:0] inptl;
-
-  always @(*) begin
-    if (vblank[7])
-      // 1=Dumped to ground
-      // 4 ports are grounded.
-      inptd = 4'b0000;
-    else
-      // 0=Normal input
-      // 4 ports are general purpose high impedance input ports.
-      inptd = I[3:0]; // 4'bzzzz;
-  end
-
   /**
    * TODO: understand latched input
    */
+  reg [1:0] ilatch; // Latched input
+
   always @(posedge MCLK) begin
     if (!RES_N)
-      inptl_ <= 2'b00;
+      ilatch <= 2'b00;
     else if (A == C_TIA_WADDR_VBLANK && D_IN[6])
-      inptl_ <= I[5:4];
+      ilatch <= I[5:4];
     else
-      inptl_ <= inptl;
+      ilatch <= ilatch;
   end
 
-  assign inptl = vblank[6] ? inptl_ : I[5:4];
+  wire [3:0] inptd;
+  wire [1:0] inptl;
+
+  assign inptd = vblank[7] ? 4'b0 : I[3:0];
+  assign inptl = vblank[6] ? ilatch : I[5:4];
 
   //
   // Audio Circuits
