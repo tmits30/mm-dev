@@ -110,7 +110,6 @@ class TIAssembler(object):
                     tag = row[1].replace(':', '').lower() # 'reg' or 'out'
                     key = row[2].replace(':', '').upper() # TIA command (register)
                     value = eval(row[3])
-                    value = value << 6 if 0 < value <= 3 else value
                     if row[0] == 'initial':
                         initial[tag][key] = value
                     else:
