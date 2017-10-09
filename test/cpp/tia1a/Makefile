@@ -43,13 +43,19 @@ run_screen: obj_dir/V$(SIM_MODULE) sim_tia1a.yml
 	make bin2img
 
 sim_tia1a.yml: $(wildcard tiasm/*.tiasm)
-	python tiasm.py $^ > $@
+	cat sim_tia1a_sync.yml > $@
+	echo "" >> $@
+	echo "# ------------------------------------------------------------------------------" >> $@
+	echo "# Test screen" >> $@
+	echo "# ------------------------------------------------------------------------------" >> $@
+	echo "" >> $@
+	python tiasm.py $^ >> $@
 
 bin2img:
 	for b in `ls ./*.bin`; do python bin2img.py $${b}; done
 
 clean:
-	rm -rf obj_dir
+	rm -rf obj_dir *.vcd
 
 clean_screen:
 	rm -rf *.bin *.png
