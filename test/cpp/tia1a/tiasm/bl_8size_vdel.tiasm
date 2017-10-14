@@ -1,0 +1,13 @@
+#
+# bl_8size_vdel.tiasm
+#
+#	t	y	x	command	value
+	0	0	0	COLUBK	0x90	# dark blue
+	0	0	3	COLUPF	0x1e	# yellow
+	0	0	6	CTRLPF	0x30
+	0	0	9	VDELBL	0x01
+	0	0	148	RESBL			# center of screen
+	0	0	151	VSYNC			# reset input
+	0	40	0	ENABL	0x02
+	0	48	0	ENABL	0x00
+	0	49	0	VDELBL	0x00

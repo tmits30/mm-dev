@@ -1,0 +1,12 @@
+#
+# pf_vband_score.tiasm
+#
+#	t	y	x	command	value
+	0	0	0	COLUBK	0x90	# dark blue
+	0	0	3	COLUPF	0x1e	# yellow
+	0	0	6	COLUP0	0x9e	# light pink
+	0	0	9	COLUP1	0x4e	# pink
+	0	0	12	CTRLPF	0x03
+	0	0	15	PF0		0b11010000
+	0	0	18	PF1		0b00111000
+	0	0	21	PF2		0b00001111
