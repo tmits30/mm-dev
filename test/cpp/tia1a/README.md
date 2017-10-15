@@ -100,4 +100,4 @@ $ python ./bin2img.py test.bin
 $ display test_0.png
 ```
 
-![test_0.png](https://raw.githubusercontent.com/tmits30/mm-dev/tia/test/cpp/tia1a/test_0.png)
+![test_0.png](https://raw.githubusercontent.com/tmits30/mm-dev/master/test/cpp/tia1a/test_0.png)
