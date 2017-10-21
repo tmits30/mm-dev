@@ -1,4 +1,5 @@
 // Atari2600
+// - memory map: www.randomterrain.com/atari-2600-memories-tutorial-andrew-davie-05.html
 module atari2600(
   input         MCLK,   // Machine clock
   input         CCLK,   // Color clock
@@ -10,7 +11,7 @@ module atari2600(
   input         C_SEL,  // Input console select switches
   input         C_STA,  // Input console start switches
   input [7:0]   D_IN,   // Input data from ROM
-  output        CS,     // ROM chiop selects
+  output        CS,     // ROM chip selects
   output [11:0] ADDR,   // ROM address
   output        HSYNC,  // Horizontal sync
   output        HBLANK, // Horizontal blank
@@ -31,13 +32,20 @@ module atari2600(
 
   assign mpu_rdy = tia_rdy;
 
+  // Address range | Function
+  // $0000-$007f   | TIA registers
+  // $0080-$00ff   | RAM
+  // $0200-$02ff   | RIOT registers
+  // $1000-$1fff   | ROM
   always @(*) begin
     if (mpu_addr[12])
-      mpu_d_in = D_IN;
+      mpu_d_in = D_IN;       // from ROM
+    else if (mpu_addr[9])
+      mpu_d_in = riot_d_out; // from RIOT registers
     else if (mpu_addr[7])
-      mpu_d_in = riot_d_out;
+      mpu_d_in = riot_d_out; // from RAM
     else
-      mpu_d_in = tia_d_out;
+      mpu_d_in = tia_d_out;  // from TIA registers
   end
 
   mm6502 mpu(
